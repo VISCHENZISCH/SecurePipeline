@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "securepipeline"
+version = "0.1.0"
+description = "Scanner DevSecOps multi-stack pour la sécurité des projets"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Félix TOVIGNAN"},
+]
+
+dependencies = [
+    "click>=8.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1",
+]
+
+[project.scripts]
+securepipeline = "securepipeline.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
