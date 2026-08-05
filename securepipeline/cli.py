@@ -12,22 +12,26 @@ from securepipeline.core.detector import detect_stacks
 from securepipeline.core.orchestrator import run_scan
 from securepipeline.ui.display import (
     clear_screen,
-    print_matrix_banner,
+    print_home_screen,
     print_menu,
     get_prompt,
+    get_path_prompt,
+    get_continue_prompt,
     print_section,
     print_stacks,
     print_scanner_start,
     print_scanner_done,
     print_scanner_skip,
     print_summary,
+    print_findings_table,
     DEB_RED, GREEN, CYAN, BLUE, WHITE, GRAY, RESET
 )
 
 
 def run_full_scan(path: str) -> None:
     """Exécute le scan complet et affiche les résultats."""
-    print_section(f"INITIATING FULL SCAN ON {os.path.abspath(path)}")
+    print_section("Scan started")
+    print(f"  {WHITE}Path:{RESET} {GRAY}{os.path.abspath(path)}{RESET}")
     stacks = detect_stacks(path)
     print_stacks(stacks)
     
@@ -73,14 +77,14 @@ def run_full_scan(path: str) -> None:
     md_report = generate_markdown(result, path, project_name=os.path.basename(os.path.abspath(path)))
     out_dir = os.path.join(path, ".securepipeline", "reports")
     report_file = save_report(md_report, out_dir)
-    print(f"  {GRAY}Report saved to: {CYAN}{report_file}{RESET}\n")
+    print(f"  {WHITE}Report:{RESET} {CYAN}{report_file}{RESET}\n")
 
 
 def interactive_loop():
     """Boucle du menu interactif."""
     while True:
         clear_screen()
-        print_matrix_banner()
+        print_home_screen()
         print_menu()
         
         try:
@@ -89,26 +93,30 @@ def interactive_loop():
             print()
             break
             
-        if choice == "00" or choice.lower() in ["q", "quit", "exit"]:
+        if choice in ["0", "00"] or choice.lower() in ["q", "quit", "exit"]:
             break
             
-        elif choice == "01":
-            path = input(f"{GREEN}root@securepipeline{RESET}:{BLUE}~/menu{RESET}# {GRAY}[Entrez le chemin du projet (defaut: .)]{RESET} ").strip() or "."
+        elif choice in ["1", "01"]:
+            path = input(get_path_prompt()).strip() or "."
             run_full_scan(path)
-            input(f"\n{GRAY}[Appuyez sur Entree pour continuer]{RESET}")
+            input(get_continue_prompt())
             
-        elif choice == "02":
-            print(f"\n  {CYAN}[i]{RESET} {WHITE}Pour une execution automatisée, utilisez :{RESET}")
-            print(f"      {GREEN}securepipeline --scan . --fail-on critical{RESET}\n")
-            input(f"{GRAY}[Appuyez sur Entree pour continuer]{RESET}")
+        elif choice in ["2", "02"]:
+            print_section("Exemple CI/CD")
+            print(f"  {GREEN}securepipeline --scan . --fail-on critical{RESET}\n")
+            input(get_continue_prompt())
             
-        elif choice == "88":
-            print(f"\n  {DEB_RED}[!] Fonctionnalité en cours de développement.{RESET}")
-            input(f"\n{GRAY}[Appuyez sur Entree pour continuer]{RESET}")
+        elif choice in ["3", "03", "88"]:
+            print(f"\n  {DEB_RED}Fonctionnalite en cours de developpement.{RESET}")
+            input(get_continue_prompt())
             
-        elif choice == "99":
-            print(f"\n  {DEB_RED}[!] Fonctionnalité en cours de développement.{RESET}")
-            input(f"\n{GRAY}[Appuyez sur Entree pour continuer]{RESET}")
+        elif choice in ["4", "04", "99"]:
+            print(f"\n  {DEB_RED}Fonctionnalite en cours de developpement.{RESET}")
+            input(get_continue_prompt())
+
+        elif choice in ["5", "05"]:
+            print(f"\n  {DEB_RED}Fonctionnalite en cours de developpement.{RESET}")
+            input(get_continue_prompt())
             
         else:
             if choice:
@@ -116,7 +124,7 @@ def interactive_loop():
                 import subprocess
                 print()
                 subprocess.run(choice, shell=True, executable='/bin/bash')
-                input(f"\n{GRAY}[Appuyez sur Entree pour continuer]{RESET}")
+                input(get_continue_prompt())
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))

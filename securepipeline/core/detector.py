@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-# ── Signatures de détection ──────────────────────────────────────────
+# Signatures de détection
 
 STACK_SIGNATURES: dict[str, list[str]] = {
     "python":  ["requirements.txt", "setup.py", "pyproject.toml", "Pipfile", "poetry.lock"],

@@ -1,8 +1,8 @@
-# 🛡️ SecurePipeline
+# SecurePipeline
 
 **SecurePipeline** est un outil CLI DevSecOps multi-stack, conçu pour analyser automatiquement un dépôt de code, détecter les stacks technologiques présentes et exécuter les contrôles de sécurité adaptés de manière transparente.
 
-## 🌟 Fonctionnalités
+## Fonctionnalités
 
 - **Détection Automatique** : Identifie la stack (Python, Node.js, PHP, Flutter, Docker, Kubernetes) sans configuration.
 - **Analyse Statique (SAST)** : Utilise Semgrep et Bandit pour détecter les patterns de code dangereux.
@@ -10,7 +10,7 @@
 - **Audit d'Infrastructure (IaC)** : Linting de Dockerfile (Hadolint), scan d'images (Trivy), analyse de manifests K8s (kube-score, Checkov).
 - **Détection de Secrets** : Recherche de clés API, tokens et mots de passe avec Gitleaks.
 - **Intégration CI/CD** : Mode headless parfait pour GitHub Actions avec génération de rapports Markdown.
-- **Interface TUI (Terminal UI)** : Mode interactif élégant développé avec Textual.
+- **Interface CLI interactive** : Menu terminal léger sans dépendance d'affichage externe.
 
 ## Installation
 
@@ -40,11 +40,11 @@ docker build -t securepipeline:latest .
 docker run --rm -v $(pwd):/app securepipeline scan /app
 ```
 
-## 🎮 Utilisation
+## Utilisation
 
-### Mode Interactif (TUI)
+### Mode Interactif
 
-Lance l'interface utilisateur textuelle (par défaut) :
+Lance le menu interactif terminal :
 
 ```bash
 securepipeline scan /chemin/vers/projet
@@ -60,7 +60,7 @@ securepipeline scan . --interactive=false --fail-on critical
 
 *Le rapport sera généré dans `.securepipeline/reports/securepipeline-report.md`.*
 
-## 🛠️ Architecture des Modules
+## Architecture des Modules
 
 | Stack | Outils Intégrés |
 |---|---|

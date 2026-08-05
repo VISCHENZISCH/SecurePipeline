@@ -17,25 +17,24 @@ def generate_markdown(result: ScanResult, path: str, project_name: str = "Projet
     for f in result.findings:
         stats[f.severity.value] += 1
         
-    # Badges SVG Shields.io pour les statistiques
     md = [
-        f"# <img src='https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/shield-halved.svg' width='30' align='center'/> Rapport de Sécurité DevSecOps - {project_name}",
+        f"# Rapport de Sécurité DevSecOps - {project_name}",
         "",
         f"**Date du scan:** {date_str}",
         f"**Durée:** {result.duration_seconds:.2f}s",
         f"**Stacks détectées:** {', '.join(result.stacks_scanned) if result.stacks_scanned else 'Aucune'}",
         "",
-        "## 📊 Résumé Exécutif",
+        "## Résumé Exécutif",
         "",
-        f"![Critique](https://img.shields.io/badge/Critique-{stats.get(Severity.CRITICAL.value, 0)}-ef4444?style=flat-square) "
-        f"![Élevé](https://img.shields.io/badge/Élevé-{stats.get(Severity.HIGH.value, 0)}-f59e0b?style=flat-square) "
-        f"![Moyen](https://img.shields.io/badge/Moyen-{stats.get(Severity.MEDIUM.value, 0)}-3b82f6?style=flat-square) "
-        f"![Faible](https://img.shields.io/badge/Faible-{stats.get(Severity.LOW.value, 0)}-8892a4?style=flat-square) "
-        f"![Info](https://img.shields.io/badge/Info-{stats.get(Severity.INFO.value, 0)}-6366f1?style=flat-square)",
+        f"- Critique: {stats.get(Severity.CRITICAL.value, 0)}",
+        f"- Élevé: {stats.get(Severity.HIGH.value, 0)}",
+        f"- Moyen: {stats.get(Severity.MEDIUM.value, 0)}",
+        f"- Faible: {stats.get(Severity.LOW.value, 0)}",
+        f"- Info: {stats.get(Severity.INFO.value, 0)}",
         "",
         f"**Total Vulnérabilités:** {result.total}",
         "",
-        "## 📋 Détails des Vulnérabilités par Module",
+        "## Détails des Vulnérabilités par Module",
         ""
     ]
 
@@ -45,12 +44,10 @@ def generate_markdown(result: ScanResult, path: str, project_name: str = "Projet
         by_scanner[f.scanner].append(f)
 
     if not result.findings:
-        md.append("![Sécurisé](https://img.shields.io/badge/Statut-Sécurisé_✅-10b981?style=for-the-badge)")
-        md.append("")
         md.append("**Aucune vulnérabilité détectée ! Bon travail.**")
 
     for scanner, findings in by_scanner.items():
-        md.append(f"### <img src='https://raw.githubusercontent.com/FortAwesome/Font-Awesome/master/svgs/solid/magnifying-glass.svg' width='20' align='center'/> Module: {scanner}")
+        md.append(f"### Module: {scanner}")
         md.append("")
         
         # Table Header
@@ -60,13 +57,12 @@ def generate_markdown(result: ScanResult, path: str, project_name: str = "Projet
         # Sort by severity
         sorted_findings = sorted(findings, key=lambda x: {"critical":0, "high":1, "medium":2, "low":3, "info":4}.get(x.severity.value, 5))
         
-        # Badges SVG pour le tableau
         badge_map = {
-            "critical": "![CRIT](https://img.shields.io/badge/-CRITIQUE-ef4444?style=flat-square)",
-            "high":     "![HIGH](https://img.shields.io/badge/-ÉLEVÉ-f59e0b?style=flat-square)",
-            "medium":   "![MED](https://img.shields.io/badge/-MOYEN-3b82f6?style=flat-square)",
-            "low":      "![LOW](https://img.shields.io/badge/-FAIBLE-8892a4?style=flat-square)",
-            "info":     "![INFO](https://img.shields.io/badge/-INFO-6366f1?style=flat-square)",
+            "critical": "CRITIQUE",
+            "high":     "ÉLEVÉ",
+            "medium":   "MOYEN",
+            "low":      "FAIBLE",
+            "info":     "INFO",
         }
         
         for f in sorted_findings:

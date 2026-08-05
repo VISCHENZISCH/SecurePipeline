@@ -1,10 +1,10 @@
-"""SecurePipeline - Logging minimal (pas de Rich)."""
+"""SecurePipeline - Logging minimal."""
 
 import logging
 import sys
 
 def get_logger(name: str = "securepipeline", level: int = logging.WARNING) -> logging.Logger:
-    """Cree un logger basique sans Rich.
+    """Cree un logger basique.
 
     Args:
         name: Nom du logger.
