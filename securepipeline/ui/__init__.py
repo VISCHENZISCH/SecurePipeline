@@ -1,1 +1,1 @@
-"""SecurePipeline - Module UI Textual."""
+"""SecurePipeline - Module UI CLI."""
