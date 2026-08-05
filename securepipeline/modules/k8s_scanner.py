@@ -44,7 +44,7 @@ class K8sScanner(BaseScanner):
             log.warning("kube-score non installé")
             return []
         
-        log.info("[K8s] → kube-score")
+        log.info("[K8s] kube-score")
         findings = []
         for f in files:
             result = run_command(["kube-score", "score", "--output-format", "json", f], timeout=60)
@@ -72,7 +72,7 @@ class K8sScanner(BaseScanner):
             log.warning("checkov non installé")
             return []
         
-        log.info("[K8s] → checkov")
+        log.info("[K8s] checkov")
         result = run_command(
             ["checkov", "-d", path, "--framework", "kubernetes", "-o", "json"],
             timeout=180

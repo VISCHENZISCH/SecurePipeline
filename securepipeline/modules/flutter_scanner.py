@@ -28,7 +28,7 @@ class FlutterScanner(BaseScanner):
     def _run_pub_outdated(self, path: str) -> list[Finding]:
         if not check_tool("dart") or not (Path(path) / "pubspec.yaml").exists():
             return []
-        log.info("[Flutter] → dart pub outdated")
+        log.info("[Flutter] dart pub outdated")
         result = run_command(["dart", "pub", "outdated", "--json"], cwd=path, timeout=120)
         if not result.stdout:
             return []
@@ -53,7 +53,7 @@ class FlutterScanner(BaseScanner):
     def _run_semgrep(self, path: str) -> list[Finding]:
         if not check_tool("semgrep"):
             return []
-        log.info("[Flutter] → semgrep")
+        log.info("[Flutter] semgrep")
         result = run_command(
             ["semgrep", "scan", "--config", "p/dart", "--json", "--quiet", path],
             cwd=path, timeout=180,

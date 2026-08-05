@@ -33,7 +33,7 @@ class PythonScanner(BaseScanner):
         findings.extend(self._run_semgrep(path))
         return findings
 
-    # ── pip-audit ─────────────────────────────────────────────────────
+    # pip-audit
 
     def _run_pip_audit(self, path: str) -> list[Finding]:
         """Audit des dépendances Python avec pip-audit."""
@@ -41,7 +41,7 @@ class PythonScanner(BaseScanner):
             log.warning("pip-audit non installé, module ignoré")
             return []
 
-        log.info("[Python] → pip-audit")
+        log.info("[Python] pip-audit")
 
         # Chercher requirements.txt ou pyproject.toml
         req_file = Path(path) / "requirements.txt"
@@ -80,7 +80,7 @@ class PythonScanner(BaseScanner):
         """pip-audit ne fournit pas de sévérité directe, on met HIGH par défaut."""
         return Severity.HIGH
 
-    # ── Bandit ────────────────────────────────────────────────────────
+    # Bandit
 
     def _run_bandit(self, path: str) -> list[Finding]:
         """Analyse statique Python avec Bandit."""
@@ -88,7 +88,7 @@ class PythonScanner(BaseScanner):
             log.warning("bandit non installé, module ignoré")
             return []
 
-        log.info("[Python] → bandit")
+        log.info("[Python] bandit")
         cmd = ["bandit", "-r", path, "-f", "json", "-q"]
         result = run_command(cmd, cwd=path, timeout=120)
 
@@ -134,7 +134,7 @@ class PythonScanner(BaseScanner):
             sev = Severity.CRITICAL
         return sev
 
-    # ── Semgrep ───────────────────────────────────────────────────────
+    # Semgrep
 
     def _run_semgrep(self, path: str) -> list[Finding]:
         """Analyse SAST avancée avec Semgrep (règles Python)."""
@@ -142,7 +142,7 @@ class PythonScanner(BaseScanner):
             log.warning("semgrep non installé, module ignoré")
             return []
 
-        log.info("[Python] → semgrep")
+        log.info("[Python] semgrep")
         cmd = [
             "semgrep", "scan",
             "--config", "p/python",

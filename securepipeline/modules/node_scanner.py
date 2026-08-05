@@ -31,7 +31,7 @@ class NodeScanner(BaseScanner):
         findings.extend(self._run_semgrep(path))
         return findings
 
-    # ── npm audit ─────────────────────────────────────────────────────
+    # npm audit
 
     def _run_npm_audit(self, path: str) -> list[Finding]:
         """Audit des dépendances Node.js avec npm audit."""
@@ -43,7 +43,7 @@ class NodeScanner(BaseScanner):
         if not (Path(path) / "package.json").exists():
             return []
 
-        log.info("[Node.js] → npm audit")
+        log.info("[Node.js] npm audit")
         cmd = ["npm", "audit", "--json"]
         result = run_command(cmd, cwd=path, timeout=120)
 
@@ -94,7 +94,7 @@ class NodeScanner(BaseScanner):
         }
         return sev_map.get(severity.lower(), Severity.MEDIUM)
 
-    # ── Semgrep ───────────────────────────────────────────────────────
+    # Semgrep
 
     def _run_semgrep(self, path: str) -> list[Finding]:
         """Analyse SAST avec Semgrep (règles JavaScript/TypeScript)."""
@@ -102,7 +102,7 @@ class NodeScanner(BaseScanner):
             log.warning("semgrep non installé, module ignoré")
             return []
 
-        log.info("[Node.js] → semgrep")
+        log.info("[Node.js] semgrep")
         cmd = [
             "semgrep", "scan",
             "--config", "p/javascript",

@@ -31,7 +31,7 @@ class PhpScanner(BaseScanner):
         findings.extend(self._run_semgrep(path))
         return findings
 
-    # ── composer audit ────────────────────────────────────────────────
+    # composer audit
 
     def _run_composer_audit(self, path: str) -> list[Finding]:
         """Audit des dépendances PHP avec composer audit."""
@@ -42,7 +42,7 @@ class PhpScanner(BaseScanner):
         if not (Path(path) / "composer.json").exists():
             return []
 
-        log.info("[PHP] → composer audit")
+        log.info("[PHP] composer audit")
         cmd = ["composer", "audit", "--format", "json", "--no-interaction"]
         result = run_command(cmd, cwd=path, timeout=120)
 
@@ -84,7 +84,7 @@ class PhpScanner(BaseScanner):
         }
         return sev_map.get(severity.lower(), Severity.MEDIUM)
 
-    # ── Semgrep PHP ───────────────────────────────────────────────────
+    # Semgrep PHP
 
     def _run_semgrep(self, path: str) -> list[Finding]:
         """Analyse SAST avec Semgrep (règles PHP)."""
@@ -92,7 +92,7 @@ class PhpScanner(BaseScanner):
             log.warning("semgrep non installé, module ignoré")
             return []
 
-        log.info("[PHP] → semgrep")
+        log.info("[PHP] semgrep")
         cmd = [
             "semgrep", "scan",
             "--config", "p/php",

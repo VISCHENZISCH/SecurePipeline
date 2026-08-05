@@ -35,13 +35,13 @@ class DockerScanner(BaseScanner):
         files = list(p.glob("**/Dockerfile*"))
         return [str(f) for f in files if f.is_file()]
 
-    # ── Hadolint ──────────────────────────────────────────────────────
+    # Hadolint
 
     def _run_hadolint(self, dockerfile: str) -> list[Finding]:
         if not check_tool("hadolint"):
             log.warning("hadolint non installé, module ignoré")
             return []
-        log.info(f"[Docker] → hadolint {Path(dockerfile).name}")
+        log.info(f"[Docker] hadolint {Path(dockerfile).name}")
         result = run_command(
             ["hadolint", "--format", "json", dockerfile], timeout=60,
         )
@@ -67,13 +67,13 @@ class DockerScanner(BaseScanner):
             log.warning(f"Erreur parsing hadolint : {e}")
         return findings
 
-    # ── Trivy filesystem ──────────────────────────────────────────────
+    # Trivy filesystem
 
     def _run_trivy_fs(self, path: str) -> list[Finding]:
         if not check_tool("trivy"):
             log.warning("trivy non installé, module ignoré")
             return []
-        log.info("[Docker] → trivy fs")
+        log.info("[Docker] trivy fs")
         result = run_command(
             ["trivy", "fs", "--format", "json", "--security-checks", "vuln,config", path],
             cwd=path, timeout=180,

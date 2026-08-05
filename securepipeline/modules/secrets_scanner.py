@@ -24,7 +24,7 @@ class SecretsScanner(BaseScanner):
             log.warning("gitleaks non installé, module ignoré")
             return []
 
-        log.info("[Secrets] → gitleaks")
+        log.info("[Secrets] gitleaks")
         report_path = Path(path) / ".gitleaks-report.json"
         
         cmd = ["gitleaks", "detect", "--source", path, "--report-path", str(report_path), "--report-format", "json"]

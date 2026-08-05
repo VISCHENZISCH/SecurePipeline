@@ -9,7 +9,7 @@ from securepipeline.modules.docker_scanner import DockerScanner
 from securepipeline.modules.k8s_scanner import K8sScanner
 from securepipeline.modules.secrets_scanner import SecretsScanner
 
-# ── Registre stack → scanners ────────────────────────────────────────
+# Registre stack vers scanners
 # Chaque stack peut avoir plusieurs scanners.
 # Le SecretsScanner (Gitleaks) est toujours exécuté.
 
