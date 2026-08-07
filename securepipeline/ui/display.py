@@ -277,14 +277,10 @@ def print_menu() -> None:
     print(f"  {ORANGE}>{RESET} {WHITE}GitHub   {RESET} {CYAN}https://github.com/VISCHENZISCH/SecurePipeline.git{RESET}")
     print()
 
-    BRANCH_COLOR = DARK_GRAY
+    BRANCH_COLOR = DEB_RED
     
     for i, (title, items) in enumerate(sections):
-        is_last_section = (i == len(sections) - 1)
-        
-        main_branch = f"{BOX_BL}{BOX_H}{BOX_H}" if is_last_section else f"{BOX_LT}{BOX_H}{BOX_H}"
-        
-        print(f"  {BRANCH_COLOR}{main_branch}{RESET} {BLUE}{BOLD}{title}{RESET}")
+        print(f"  {BLUE}{BOLD}{title}{RESET}")
         
         for j, (key, text, is_quit) in enumerate(items):
             is_last_item = (j == len(items) - 1)
@@ -292,15 +288,19 @@ def print_menu() -> None:
             sub_branch = f"{BOX_BL}{BOX_H}{BOX_H}" if is_last_item else f"{BOX_LT}{BOX_H}{BOX_H}"
             
             if is_quit:
-                key_str = f"{GRAY}[{key}]{RESET}"
+                key_str = f"{DEB_RED}[{RESET}{GREEN}{BOLD}{key}{RESET}{DEB_RED}]{RESET}"
                 text_color = GRAY
+                sub_branch = "   "
             else:
-                key_str = f"{DARK_GRAY}[{RESET}{CYAN}{BOLD}{key}{RESET}{DARK_GRAY}]{RESET}"
+                key_str = f"{DEB_RED}[{RESET}{GREEN}{BOLD}{key}{RESET}{DEB_RED}]{RESET}"
                 text_color = WHITE
             
-            indent = "   " if is_last_section else f"{BRANCH_COLOR}{BOX_V}{RESET}  "
+            indent = "  "
             
-            print(f"  {indent}{BRANCH_COLOR}{sub_branch}{RESET} {key_str} {text_color}{text}{RESET}")
+            if is_quit:
+                print(f"  {indent}{key_str} {text_color}{text}{RESET}")
+            else:
+                print(f"  {indent}{BRANCH_COLOR}{sub_branch}{RESET} {key_str} {text_color}{text}{RESET}")
             
     print()
 
