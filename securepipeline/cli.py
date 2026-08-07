@@ -41,8 +41,12 @@ from securepipeline.ui.display import (
 _config = Config()
 
 
-def run_full_scan(path: str) -> None:
-    """Execute le scan complet et affiche les resultats."""
+def run_full_scan(path: str) -> "ScanResult":
+    """Execute le scan complet et affiche les resultats.
+
+    Returns:
+        ScanResult contenant tous les findings.
+    """
     print_section("Scan started")
     print(f"  {DOT} {WHITE}Path:{RESET} {GRAY}{os.path.abspath(path)}{RESET}")
 
@@ -50,7 +54,8 @@ def run_full_scan(path: str) -> None:
     print_stacks(stacks)
 
     if not stacks:
-        return
+        from securepipeline.core.models import ScanResult
+        return ScanResult()
 
     from securepipeline.modules import get_scanners_for_stacks
     scanners = get_scanners_for_stacks(stacks)
@@ -109,6 +114,8 @@ def run_full_scan(path: str) -> None:
     out_dir = os.path.join(path, ".securepipeline", "reports")
     report_file = save_report(md_report, out_dir)
     print_status(f"Rapport Markdown: {report_file}", "success")
+
+    return result
 
 
 def view_last_report(path: str = ".") -> None:
@@ -436,14 +443,19 @@ def cli(scan_path, fail_on, output):
         _config.fail_on = fail_on
         _config.output_format = output
 
-        run_full_scan(scan_path)
+        result = run_full_scan(scan_path)
 
         if output in ("html", "both"):
             generate_html_report(scan_path)
 
         # Exit code basé sur les findings
-        # Le run_full_scan ne retourne pas le result,
-        # mais pour le CI/CD on check via le rapport
+        exit_code = result.exit_code(fail_on)
+        if exit_code != 0:
+            print_status(
+                f"Échec : des vulnérabilités >= '{fail_on}' ont été détectées.",
+                "error",
+            )
+        sys.exit(exit_code)
     else:
         # Mode interactif par defaut
         interactive_loop()
