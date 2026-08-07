@@ -17,7 +17,7 @@ def get_logger(name: str = "securepipeline", level: int = logging.WARNING) -> lo
 
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stderr)
-        handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+        handler.setFormatter(logging.Formatter("  [%(levelname)s] %(message)s"))
         logger.addHandler(handler)
 
     logger.setLevel(level)

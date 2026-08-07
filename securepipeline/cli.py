@@ -376,8 +376,18 @@ def interactive_loop():
             if choice:
                 # Execute la commande comme un terminal
                 import subprocess
+                from securepipeline.ui.display import DEB_RED, RESET
                 print()
-                subprocess.run(choice, shell=True)
+                try:
+                    res = subprocess.run(choice, shell=True, capture_output=True, text=True, errors="replace")
+                    if res.stdout:
+                        for line in res.stdout.rstrip().split("\n"):
+                            print(f"  {line.lstrip()}")
+                    if res.stderr:
+                        for line in res.stderr.rstrip().split("\n"):
+                            print(f"  {DEB_RED}{line.lstrip()}{RESET}")
+                except Exception as e:
+                    print(f"  {DEB_RED}Erreur: {e}{RESET}")
                 input(get_continue_prompt("~/shell"))
 
 

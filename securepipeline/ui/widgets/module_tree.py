@@ -26,7 +26,7 @@ def print_module_tree(scanners: list, stacks: list[str]) -> None:
         scanners: Liste d'instances de BaseScanner.
         stacks: Liste des stacks detectees.
     """
-    print(f"\n  {CYAN}{BOLD}Modules de scan{RESET}")
+    print(f"\n  {CYAN}{BOLD}▶ Modules de scan{RESET}")
     print()
 
     # Grouper par stack
@@ -75,7 +75,7 @@ def print_module_status_tree(results: dict[str, dict]) -> None:
     Args:
         results: Dict {module_name: {"status": "ok"|"skip"|"error", "count": int}}
     """
-    print(f"\n  {CYAN}{BOLD}Resultats par module{RESET}")
+    print(f"\n  {CYAN}{BOLD}▶ Résultats par module{RESET}")
     print()
 
     modules = list(results.keys())
