@@ -29,7 +29,7 @@ from securepipeline.ui.display import (
     print_status,
     print_banner,
     typing_print,
-    DEB_RED, GREEN, CYAN, BLUE, WHITE, GRAY, DARK_GRAY, ORANGE, RESET,
+    DEB_RED, GREEN, CYAN, BLUE, WHITE, GRAY, DARK_GRAY, ORANGE, RESET, BOLD,
     CHECK, CROSS, DOT,
 )
 
@@ -154,6 +154,117 @@ def generate_html_report(path: str = ".") -> None:
     print_status(f"Rapport HTML genere: {html_file}", "success")
 
 
+def detect_stacks_only(path: str = ".") -> None:
+    """Detecte et affiche les stacks technologiques sans lancer de scan."""
+    print_section("Detection des stacks")
+    print(f"  {DOT} {WHITE}Chemin:{RESET} {GRAY}{os.path.abspath(path)}{RESET}")
+    print()
+
+    stacks = detect_stacks(path)
+    print_stacks(stacks)
+
+    if stacks:
+        from securepipeline.modules import get_scanners_for_stacks
+        scanners = get_scanners_for_stacks(stacks)
+        print(f"  {WHITE}{len(scanners)} module(s) de scan seraient actives.{RESET}")
+    print()
+
+
+def check_all_prerequisites() -> None:
+    """Verifie que tous les outils externes requis sont installes."""
+    from securepipeline.modules import STACK_SCANNERS, GLOBAL_SCANNERS
+
+    print_section("Verification des prerequis")
+    print()
+
+    all_tools: dict[str, list[str]] = {}  # tool -> [scanners qui l'utilisent]
+    all_scanners = []
+
+    for scanner_classes in STACK_SCANNERS.values():
+        all_scanners.extend(scanner_classes)
+    all_scanners.extend(GLOBAL_SCANNERS)
+
+    for scanner_cls in all_scanners:
+        info = scanner_cls().info()
+        for tool in info.tools_required:
+            if tool not in all_tools:
+                all_tools[tool] = []
+            all_tools[tool].append(info.name)
+
+    from securepipeline.utils.subprocess_runner import check_tool
+
+    ok_count = 0
+    missing_count = 0
+
+    for tool, used_by in sorted(all_tools.items()):
+        installed = check_tool(tool)
+        if installed:
+            print(f"  {GREEN}{CHECK}{RESET} {WHITE}{tool:<20}{RESET} {GRAY}{DOT} {', '.join(used_by)}{RESET}")
+            ok_count += 1
+        else:
+            print(f"  {DEB_RED}{CROSS}{RESET} {WHITE}{tool:<20}{RESET} {GRAY}{DOT} {', '.join(used_by)}{RESET}")
+            missing_count += 1
+
+    print()
+    if missing_count == 0:
+        print_status("Tous les outils sont installes.", "success")
+    else:
+        print_status(f"{missing_count} outil(s) manquant(s) sur {ok_count + missing_count}.", "warning")
+    print()
+
+
+def list_all_modules() -> None:
+    """Affiche la liste de tous les modules de scan disponibles."""
+    from securepipeline.modules import STACK_SCANNERS, GLOBAL_SCANNERS
+
+    print_section("Modules de scan disponibles")
+    print()
+
+    # Modules par stack
+    for stack, scanner_classes in sorted(STACK_SCANNERS.items()):
+        print(f"  {CYAN}{BOLD}{stack.upper()}{RESET}")
+        for scanner_cls in scanner_classes:
+            info = scanner_cls().info()
+            tools = ", ".join(info.tools_required) if info.tools_required else "aucun"
+            print(f"    {DOT} {WHITE}{info.name}{RESET}  {GRAY}{DOT} outils: {tools}{RESET}")
+            print(f"      {GRAY}{info.description}{RESET}")
+        print()
+
+    # Modules globaux
+    print(f"  {CYAN}{BOLD}GLOBAL{RESET}")
+    for scanner_cls in GLOBAL_SCANNERS:
+        info = scanner_cls().info()
+        tools = ", ".join(info.tools_required) if info.tools_required else "aucun"
+        print(f"    {DOT} {WHITE}{info.name}{RESET}  {GRAY}{DOT} outils: {tools}{RESET}")
+        print(f"      {GRAY}{info.description}{RESET}")
+    print()
+
+
+def show_about() -> None:
+    """Affiche les informations sur l'outil."""
+    from securepipeline import __version__, __author__
+
+    print_section("A propos de SecurePipeline")
+    print()
+    print(f"  {WHITE}Version      {GRAY}{DOT}{RESET} {CYAN}{__version__}{RESET}")
+    print(f"  {WHITE}Auteur       {GRAY}{DOT}{RESET} {CYAN}{__author__}{RESET}")
+    print(f"  {WHITE}Langage      {GRAY}{DOT}{RESET} {CYAN}Python{RESET}")
+    print(f"  {WHITE}Licence      {GRAY}{DOT}{RESET} {CYAN}Usage interne COSIT BENIN{RESET}")
+    print()
+
+    print(f"  {BLUE}{BOLD}Commandes CLI :{RESET}")
+    print(f"    {GREEN}securepipeline{RESET}                              {GRAY}Mode interactif{RESET}")
+    print(f"    {GREEN}securepipeline --scan . --fail-on critical{RESET}  {GRAY}Mode headless{RESET}")
+    print(f"    {GREEN}securepipeline --scan . --output html{RESET}       {GRAY}Avec rapport HTML{RESET}")
+    print()
+
+    print(f"  {BLUE}{BOLD}Documentation :{RESET}")
+    print(f"    {DOT} {WHITE}docs/INSTALL.md{RESET}           {GRAY}Guide d'installation{RESET}")
+    print(f"    {DOT} {WHITE}docs/USAGE.md{RESET}             {GRAY}Guide d'utilisation{RESET}")
+    print(f"    {DOT} {WHITE}docs/devsecops-guide.md{RESET}   {GRAY}Guide DevSecOps{RESET}")
+    print()
+
+
 def show_config() -> None:
     """Affiche et permet de modifier la configuration."""
     print_config(_config)
@@ -216,19 +327,36 @@ def interactive_loop():
             input(get_continue_prompt())
 
         elif choice in ["2", "02"]:
-            show_cicd_example()
+            path = input(get_path_prompt()).strip() or "."
+            detect_stacks_only(path)
             input(get_continue_prompt())
 
         elif choice in ["3", "03"]:
-            view_last_report()
+            show_cicd_example()
             input(get_continue_prompt())
 
         elif choice in ["4", "04"]:
-            generate_html_report()
+            view_last_report()
             input(get_continue_prompt())
 
         elif choice in ["5", "05"]:
+            generate_html_report()
+            input(get_continue_prompt())
+
+        elif choice in ["6", "06"]:
+            check_all_prerequisites()
+            input(get_continue_prompt())
+
+        elif choice in ["7", "07"]:
+            list_all_modules()
+            input(get_continue_prompt())
+
+        elif choice in ["8", "08"]:
             show_config()
+            input(get_continue_prompt())
+
+        elif choice in ["9", "09"]:
+            show_about()
             input(get_continue_prompt())
 
         else:
