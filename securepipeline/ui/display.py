@@ -242,7 +242,7 @@ def print_home_screen() -> None:
     print()
 
 
-# display.py::Menu principal ──────────────────────────────────────────────────────────
+# display.py::Menu principal -----------------------------------------------------#
 
 def print_menu() -> None:
     """Affiche le menu interactif sous forme d'arborescence."""
@@ -251,7 +251,7 @@ def print_menu() -> None:
         ("Scan", [
             ("1", "Scanner un projet", False),
             ("2", "Détecter les stacks", False),
-            ("3", "Exemple CI/CD", False),
+            ("3", "CI/CD", False),
         ]),
         ("Rapports", [
             ("4", "Voir le dernier rapport", False),
@@ -277,13 +277,12 @@ def print_menu() -> None:
     print(f"  {ORANGE}>{RESET} {WHITE}GitHub   {RESET} {CYAN}https://github.com/VISCHENZISCH/SecurePipeline.git{RESET}")
     print()
 
-    DBL_LT = "\u2560"  # ╠
     BRANCH_COLOR = DARK_GRAY
     
     for i, (title, items) in enumerate(sections):
         is_last_section = (i == len(sections) - 1)
         
-        main_branch = f"{DBL_BL}{DBL_H}{DBL_H}" if is_last_section else f"{DBL_LT}{DBL_H}{DBL_H}"
+        main_branch = f"{BOX_BL}{BOX_H}{BOX_H}" if is_last_section else f"{BOX_LT}{BOX_H}{BOX_H}"
         
         print(f"  {BRANCH_COLOR}{main_branch}{RESET} {BLUE}{BOLD}{title}{RESET}")
         
@@ -299,7 +298,7 @@ def print_menu() -> None:
                 key_str = f"{DARK_GRAY}[{RESET}{CYAN}{BOLD}{key}{RESET}{DARK_GRAY}]{RESET}"
                 text_color = WHITE
             
-            indent = "   " if is_last_section else f"{BRANCH_COLOR}{DBL_V}{RESET}  "
+            indent = "   " if is_last_section else f"{BRANCH_COLOR}{BOX_V}{RESET}  "
             
             print(f"  {indent}{BRANCH_COLOR}{sub_branch}{RESET} {key_str} {text_color}{text}{RESET}")
             
