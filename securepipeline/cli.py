@@ -262,7 +262,6 @@ def show_about() -> None:
     print(f"  {WHITE}Version      {GRAY}{DOT}{RESET} {CYAN}{__version__}{RESET}")
     print(f"  {WHITE}Auteur       {GRAY}{DOT}{RESET} {CYAN}{__author__}{RESET}")
     print(f"  {WHITE}Langage      {GRAY}{DOT}{RESET} {CYAN}Python{RESET}")
-    print(f"  {WHITE}Licence      {GRAY}{DOT}{RESET} {CYAN}Usage interne COSIT BÉNIN{RESET}")
     print()
 
     print(f"  {BLUE}{BOLD}Commandes CLI :{RESET}")

@@ -42,6 +42,7 @@ MAGENTA    = rgb(191, 90, 242)      # Magenta (accent)
 WHITE      = rgb(230, 230, 230)     # Blanc doux
 GRAY       = rgb(120, 120, 130)     # Gris neutre
 DARK_GRAY  = rgb(72, 72, 78)       # Gris foncé (bordures)
+LIGHT_YELLOW_WHITE = rgb(255, 255, 210) # Jaune clair proche du blanc
 LIGHT_CYAN = rgb(130, 230, 230)    # Cyan clair (second accent)
 
 # Backgrounds
@@ -333,7 +334,7 @@ def get_prompt(path: str = "~/menu") -> str:
     """Prompt principal style terminal cyber."""
     now = datetime.now().strftime("%H:%M:%S")
     return (
-        f"{DIM_GREEN}[{DARK_GRAY}{now}{DIM_GREEN}]{RESET} "
+        f"{DIM_GREEN}[{LIGHT_YELLOW_WHITE}{now}{DIM_GREEN}]{RESET} "
         f"{NEON_GREEN}sec{RESET}{DIM_GREEN}@{RESET}{CYAN}pipeline{RESET}"
         f"{DIM_GREEN}:{RESET}{BLUE}{path}{RESET}"
         f"{NEON_GREEN}${RESET} "
@@ -518,14 +519,10 @@ def print_config(config) -> None:
     """Affiche la configuration actuelle."""
     print_section("Configuration")
     print()
-    w = 40
-
-    print(box_top(w, DARK_GRAY))
-    print(box_row(f"{WHITE}Seuil d'echec  {GRAY}{BOX_V}{RESET} {CYAN}{config.fail_on}{RESET}", w, DARK_GRAY))
-    print(box_row(f"{WHITE}Format rapport {GRAY}{BOX_V}{RESET} {CYAN}{config.output_format}{RESET}", w, DARK_GRAY))
-    print(box_row(f"{WHITE}Dossier output {GRAY}{BOX_V}{RESET} {CYAN}{config.report_dir}{RESET}", w, DARK_GRAY))
-    print(box_row(f"{WHITE}Mode interactif{GRAY}{BOX_V}{RESET} {CYAN}{'oui' if config.interactive else 'non'}{RESET}", w, DARK_GRAY))
-    print(box_bottom(w, DARK_GRAY))
+    print(f"  {WHITE}Seuil d'echec  {GRAY}{DOT}{RESET} {CYAN}{config.fail_on}{RESET}")
+    print(f"  {WHITE}Format rapport {GRAY}{DOT}{RESET} {CYAN}{config.output_format}{RESET}")
+    print(f"  {WHITE}Dossier output {GRAY}{DOT}{RESET} {CYAN}{config.report_dir}{RESET}")
+    print(f"  {WHITE}Mode interactif{GRAY}{DOT}{RESET} {CYAN}{'oui' if config.interactive else 'non'}{RESET}")
     print()
 
 
