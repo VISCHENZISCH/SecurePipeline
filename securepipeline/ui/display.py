@@ -309,6 +309,7 @@ def print_menu() -> None:
     import platform
     import getpass
     import sys
+    import socket
     
     os_info = f"{platform.system()} {platform.release()}"
     try:
@@ -317,10 +318,19 @@ def print_menu() -> None:
         user_name = "unknown"
         
     py_version = f"Python {sys.version_info.major}.{sys.version_info.minor}"
+    
+    try:
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+    except Exception:
+        hostname = "unknown"
+        local_ip = "127.0.0.1"
 
     print(f"  {ORANGE}>{RESET} {WHITE}User     {RESET} {CYAN}{user_name}{RESET}")
+    print(f"  {ORANGE}>{RESET} {WHITE}Host     {RESET} {CYAN}{hostname}{RESET}")
     print(f"  {ORANGE}>{RESET} {WHITE}OS       {RESET} {CYAN}{os_info}{RESET}")
     print(f"  {ORANGE}>{RESET} {WHITE}Runtime  {RESET} {CYAN}{py_version}{RESET}")
+    print(f"  {ORANGE}>{RESET} {WHITE}IP Local {RESET} {CYAN}{local_ip}{RESET}")
     print()
 
 
