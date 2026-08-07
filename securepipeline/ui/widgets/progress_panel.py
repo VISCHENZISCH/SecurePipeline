@@ -6,7 +6,7 @@ import threading
 
 from securepipeline.ui.display import (
     RESET, BOLD, DIM,
-    CYAN, GREEN, GRAY, WHITE, DARK_GRAY, YELLOW,
+    CYAN, GREEN, GRAY, WHITE, DARK_GRAY, YELLOW, DIM_GREEN, DEB_RED,
     BLOCK_FULL, BLOCK_LIGHT, BAR_H, DOT, CHECK,
 )
 
@@ -17,24 +17,27 @@ SPINNER_FAST   = ["|", "/", "-", "\\"]
 
 
 class ScanProgress:
-    """Barre de progression animee pour le scan.
+    """Barre de progression animee pour le scan."""
 
-    Usage:
-        with ScanProgress(total=5) as progress:
-            for scanner in scanners:
-                progress.update(scanner.info().name)
-                # ... run scan ...
-                progress.advance()
-    """
-
-    def __init__(self, total: int):
-        self.total = total
-        self.current = 0
-        self.current_name = ""
+    def __init__(self, scanner_names: list[str]):
+        self.scanner_names = scanner_names
+        self.total = len(scanner_names)
+        self.completed = 0
+        self.statuses = {name: "PENDING" for name in scanner_names}
         self._running = False
         self._thread: threading.Thread | None = None
         self._frame = 0
         self._start_time = 0.0
+        self._lines_drawn = 0
+
+    def start_scanner(self, name: str) -> None:
+        """Marque un scanner comme demarre."""
+        self.statuses[name] = "RUNNING"
+
+    def finish_scanner(self, name: str, status: str) -> None:
+        """Marque un scanner comme termine."""
+        self.statuses[name] = status
+        self.completed += 1
 
     def __enter__(self):
         self._start_time = time.time()
@@ -47,50 +50,74 @@ class ScanProgress:
         self._running = False
         if self._thread:
             self._thread.join(timeout=1)
-        # Effacer la ligne de progression
-        sys.stdout.write(f"\r{' ' * 80}\r")
-        sys.stdout.flush()
-
-    def update(self, name: str) -> None:
-        """Met a jour le nom du module en cours."""
-        self.current_name = name
-
-    def advance(self) -> None:
-        """Avance d'une etape."""
-        self.current += 1
+        self._draw()
+        print() # Nouvelle ligne a la fin
 
     def _animate(self) -> None:
         """Thread d'animation."""
         while self._running:
-            elapsed = time.time() - self._start_time
-            frame = SPINNER_FAST[self._frame % len(SPINNER_FAST)]
+            self._draw()
             self._frame += 1
-
-            # Barre de progression
-            bar_width = 25
-            if self.total > 0:
-                filled = int((self.current / self.total) * bar_width)
-            else:
-                filled = 0
-            empty = bar_width - filled
-            bar = f"{GREEN}{BLOCK_FULL * filled}{DARK_GRAY}{BLOCK_LIGHT * empty}{RESET}"
-
-            # Pourcentage
-            pct = int((self.current / max(self.total, 1)) * 100)
-
-            # Ligne de progression
-            line = (
-                f"\r  {CYAN}{frame}{RESET} "
-                f"{bar} "
-                f"{WHITE}{pct:3d}%{RESET} "
-                f"{GRAY}{BAR_H}{RESET} "
-                f"{WHITE}{self.current_name:<24}{RESET} "
-                f"{DIM}{GRAY}({elapsed:.1f}s){RESET}"
-            )
-
-            sys.stdout.write(line)
-            sys.stdout.flush()
             time.sleep(0.12)
+
+    def _draw(self) -> None:
+        """Dessine la progression dans le terminal."""
+        lines = []
+        lines.append(f"  {CYAN}Scanning repository{RESET}")
+        lines.append("")
+
+        # Barre de progression globale
+        bar_width = 25
+        if self.total > 0:
+            filled = int((self.completed / self.total) * bar_width)
+        else:
+            filled = 0
+        empty = bar_width - filled
+        pct = int((self.completed / max(self.total, 1)) * 100)
+        bar = f"{DIM_GREEN}{BLOCK_FULL * filled}{DARK_GRAY}{BLOCK_LIGHT * empty}{RESET}"
+        
+        lines.append(f"  {bar} {WHITE}{pct}%{RESET}")
+        lines.append("")
+
+        frame_char = SPINNER_FAST[self._frame % len(SPINNER_FAST)]
+
+        # Liste des scanners
+        for name in self.scanner_names:
+            status = self.statuses.get(name, "PENDING")
+            if status == "PENDING":
+                continue # On n'affiche pas encore ceux qui n'ont pas commence
+                
+            name_padded = name + "." * max(0, 20 - len(name))
+            
+            if status == "RUNNING":
+                color = CYAN
+                status_text = f"{frame_char} RUNNING"
+            elif status == "OK":
+                color = GREEN
+                status_text = "OK"
+            elif status.startswith("SKIP"):
+                color = GRAY
+                status_text = status
+            elif status == "ERR":
+                color = DEB_RED
+                status_text = "ERROR"
+            else:
+                color = WHITE
+                status_text = status
+                
+            lines.append(f"  {WHITE}{name_padded}{RESET}{color}{status_text}{RESET}")
+
+        # Effacement et redessin
+        out = ""
+        if self._lines_drawn > 0:
+            out += f"\033[{self._lines_drawn}A" # Remonte le curseur
+        
+        for line in lines:
+            out += f"\033[2K{line}\n" # Efface la ligne et ecrit
+            
+        sys.stdout.write(out)
+        sys.stdout.flush()
+        self._lines_drawn = len(lines)
 
 
 def print_progress_bar(current: int, total: int, label: str = "", width: int = 30) -> None:

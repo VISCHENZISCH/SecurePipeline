@@ -2,17 +2,21 @@
 
 from securepipeline.ui.display import (
     RESET, BOLD,
-    CYAN, GREEN, GRAY, WHITE, DARK_GRAY, DEB_RED,
+    CYAN, GREEN, GRAY, WHITE, DARK_GRAY, DEB_RED, DIM_GREEN,
     BOX_V, BOX_H, BOX_TL, BOX_BL, BOX_LT,
     CIRCLE_F, CIRCLE_E, CHECK, CROSS, DIAMOND,
 )
 
 
+# Dégradé rouge -> orange pour les branches
+_C1 = "\033[38;2;171;4;21m"
+_C2 = "\033[38;2;255;107;53m"
+
 # Caractères d'arborescence
-TREE_PIPE  = f"{DARK_GRAY}{BOX_V}{RESET}   "
-TREE_TEE   = f"{DARK_GRAY}{BOX_LT}{BOX_H}{BOX_H}{RESET} "
-TREE_ELBOW = f"{DARK_GRAY}{BOX_BL}{BOX_H}{BOX_H}{RESET} "
-TREE_BLANK = "    "
+TREE_PIPE  = f"{_C1}{BOX_V}{RESET}  "
+TREE_TEE   = f"{_C1}{BOX_LT}{_C2}{BOX_H}{RESET} "
+TREE_ELBOW = f"{_C1}{BOX_BL}{_C2}{BOX_H}{RESET} "
+TREE_BLANK = "   "
 
 
 def print_module_tree(scanners: list, stacks: list[str]) -> None:
@@ -23,7 +27,6 @@ def print_module_tree(scanners: list, stacks: list[str]) -> None:
         stacks: Liste des stacks detectees.
     """
     print(f"\n  {CYAN}{BOLD}Modules de scan{RESET}")
-    print(f"  {DARK_GRAY}{BOX_H * 30}{RESET}")
     print()
 
     # Grouper par stack
@@ -73,7 +76,6 @@ def print_module_status_tree(results: dict[str, dict]) -> None:
         results: Dict {module_name: {"status": "ok"|"skip"|"error", "count": int}}
     """
     print(f"\n  {CYAN}{BOLD}Resultats par module{RESET}")
-    print(f"  {DARK_GRAY}{BOX_H * 30}{RESET}")
     print()
 
     modules = list(results.keys())

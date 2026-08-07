@@ -30,10 +30,12 @@ def bg_rgb(r: int, g: int, b: int) -> str:
 
 #Couleurs principales
 DEB_RED    = rgb(255, 69, 58)       # Rouge vif (critiques)
-COSIT_RED  = rgb(205, 6, 25)       # Rouge vif (critiques)
+COSIT_RED  = rgb(171, 4, 21)       # Rouge vif (critiques)
 ORANGE     = rgb(255, 159, 10)      # Orange (high)
 YELLOW     = rgb(255, 214, 10)      # Jaune (medium)
 GREEN      = rgb(48, 209, 88)       # Vert (succès, OK)
+NEON_GREEN = rgb(0, 255, 136)       # Vert néon CTA (#00FF88)
+DIM_GREEN  = f"{DIM}{NEON_GREEN}"   # Vert atténué
 CYAN       = rgb(0, 230, 230)       # Cyan néon (accent principal)
 BLUE       = rgb(100, 160, 255)     # Bleu doux (sections)
 MAGENTA    = rgb(191, 90, 242)      # Magenta (accent)
@@ -70,7 +72,7 @@ SEV_BG = {
 
 SEV_LABELS = {
     "critical": "CRITIQUE",
-    "high":     "ELEVE",
+    "high":     "ÉLEVÉ",
     "medium":   "MOYEN",
     "low":      "FAIBLE",
     "info":     "INFO",
@@ -78,10 +80,10 @@ SEV_LABELS = {
 
 SEV_INDICATORS = {
     "critical": f"{DEB_RED}{BOLD}[!!!]{RESET}",
-    "high":     f"{ORANGE}{BOLD}[!!]{RESET}",
-    "medium":   f"{YELLOW}[!]{RESET}",
-    "low":      f"{BLUE}[-]{RESET}",
-    "info":     f"{GREEN}[i]{RESET}",
+    "high":     f"{ORANGE}{BOLD}[!!] {RESET}",
+    "medium":   f"{YELLOW}[!]  {RESET}",
+    "low":      f"{BLUE}[-]  {RESET}",
+    "info":     f"{GREEN}[i]  {RESET}",
 }
 
 
@@ -96,14 +98,14 @@ PROJECT_LOGO_LINES = (
     "                                         /_/",
 )
 
-# Dégradé cyan -> vert (lignes du logo)
+# Dégradé rouge -> orange (#FF6B35) (lignes du logo)
 LOGO_GRADIENT = [
-    rgb(174, 19, 35),     # Cyan pur
-    rgb(143, 1, 16),
-    rgb(224, 7, 29),
-    rgb(255, 0, 25),
-    rgb(212, 24, 43),
-    rgb(205, 6, 25),     # Vert
+    rgb(171, 4, 21),      # Rouge sombre
+    rgb(192, 30, 29),
+    rgb(213, 55, 37),
+    rgb(234, 81, 45),
+    rgb(255, 107, 53),    # Orange #FF6B35
+    rgb(255, 130, 70),    # Orange clair
 ]
 
 SUBTITLE_TEXT = "Scanner DevSecOps multi-stack"
@@ -161,8 +163,8 @@ BAR_H       = "\u2501"  # ━ (heavy horizontal)
 DOT         = "\u2022"  # •
 ARROW_R     = "\u25b6"  # ▶
 ARROW_D     = "\u25bc"  # ▼
-CHECK       = "\u2714"  # ✔
-CROSS       = "\u2718"  # ✘
+CHECK       = "[+]"  # Remplace ✔
+CROSS       = "[-]"  # Remplace ✘
 CIRCLE_F    = "\u25cf"  # ●
 CIRCLE_E    = "\u25cb"  # ○
 DIAMOND     = "\u25c6"  # ◆
@@ -242,89 +244,118 @@ def print_home_screen() -> None:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cwd = os.path.basename(os.getcwd()) or "."
 
-    print(f"  {COSIT_RED}{CIRCLE_F}{RESET} {WHITE}Projet   {RESET} {GRAY}{BOX_V}{RESET} {CYAN}{cwd}{RESET}")
-    print(f"  {COSIT_RED}{CIRCLE_F}{RESET} {WHITE}Mode     {RESET} {GRAY}{BOX_V}{RESET} {CYAN}interactif{RESET}")
-    print(f"  {COSIT_RED}{CIRCLE_F}{RESET} {WHITE}Rapports {RESET} {GRAY}{BOX_V}{RESET} {CYAN}reports{RESET}")
-    print(f"  {COSIT_RED}{CIRCLE_F}{RESET} {WHITE}Date     {RESET} {GRAY}{BOX_V}{RESET} {CYAN}{now}{RESET}")
+    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Projet   {RESET} {GRAY}{BOX_V}{RESET} {CYAN}{cwd}{RESET}")
+    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Mode     {RESET} {GRAY}{BOX_V}{RESET} {CYAN}interactif{RESET}")
+    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Rapports {RESET} {GRAY}{BOX_V}{RESET} {CYAN}reports{RESET}")
+    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Date     {RESET} {GRAY}{BOX_V}{RESET} {CYAN}{now}{RESET}")
     print()
 
 
 # display.py::Menu principal ──────────────────────────────────────────────────────────
 
 def print_menu() -> None:
-    """Affiche le menu interactif en style arborescence."""
+    """Affiche le menu interactif en style panneaux arrondis avec dégradé horizontal."""
+    
+    width = 32
 
-    # Caractères d'arborescence avec couleur
-    pipe  = f"{COSIT_RED}{BOX_V}{RESET}"
-    tee   = f"{COSIT_RED}{BOX_LT}{BOX_H}{BOX_H}{RESET}"
-    elbow = f"{COSIT_RED}{BOX_BL}{BOX_H}{BOX_H}{RESET}"
+    def render_panel(title: str, items: list) -> None:
+        def c(x: int) -> str:
+            # Dégradé RGB horizontal: Rouge (171, 4, 21) -> Orange (255, 107, 53)
+            f = x / max(1, width - 1)
+            r = int(171 + (255 - 171) * f)
+            g = int(4 + (107 - 4) * f)
+            b = int(21 + (53 - 21) * f)
+            return f"\033[38;2;{r};{g};{b}m"
+
+        top_bar = BOX_H * (width - 5 - len(title))
+        
+        # Ligne du haut
+        out = "  " + c(0) + "╭" + c(1) + "─" + c(2) + " "
+        out += f"{BLUE}{BOLD}{title}{RESET}"
+        
+        start_x = 3 + len(title)
+        out += c(start_x) + " "
+        for i in range(len(top_bar)):
+            out += c(start_x + 1 + i) + BOX_H
+        out += c(width - 1) + "╮" + RESET
+        print(out)
+        
+        # Éléments
+        for key, text, is_quit in items:
+            key_color = GREEN if not is_quit else GRAY
+            text_color = WHITE if not is_quit else GRAY
+            
+            line_str = f"[{key}] {text}"
+            pad = width - 4 - len(line_str)
+            
+            # Bordures gauche (x=0) et droite (x=width-1)
+            out_line = f"  {c(0)}│{RESET} {key_color}[{key}]{RESET} {text_color}{text}{RESET}{' ' * pad} {c(width-1)}│{RESET}"
+            print(out_line)
+            
+        # Ligne du bas
+        out_bot = "  " + c(0) + "╰"
+        for i in range(1, width - 1):
+            out_bot += c(i) + BOX_H
+        out_bot += c(width - 1) + "╯" + RESET
+        print(out_bot)
+        print()
 
     # Section Scan
-    print(f"  {tee} {BLUE}{BOLD}Scan{RESET}")
-    print(f"  {pipe}   {tee} {GREEN}[1]{RESET} {WHITE}Scanner un projet{RESET}")
-    print(f"  {pipe}   {tee} {GREEN}[2]{RESET} {WHITE}Detecter les stacks d'un projet{RESET}")
-    print(f"  {pipe}   {elbow} {GREEN}[3]{RESET} {WHITE}Exemple de commande CI/CD{RESET}")
-    print(f"  {pipe}")
+    render_panel("Scan", [
+        ("1", "Scanner un projet", False),
+        ("2", "Détecter les stacks", False),
+        ("3", "Exemple CI/CD", False),
+    ])
 
     # Section Rapports
-    print(f"  {tee} {BLUE}{BOLD}Rapports{RESET}")
-    print(f"  {pipe}   {tee} {GREEN}[4]{RESET} {WHITE}Voir le dernier rapport{RESET}")
-    print(f"  {pipe}   {elbow} {GREEN}[5]{RESET} {WHITE}Generer un rapport HTML{RESET}")
-    print(f"  {pipe}")
+    render_panel("Rapports", [
+        ("4", "Voir le dernier rapport", False),
+        ("5", "Générer un rapport HTML", False),
+    ])
 
     # Section Outils
-    print(f"  {tee} {BLUE}{BOLD}Outils{RESET}")
-    print(f"  {pipe}   {tee} {GREEN}[6]{RESET} {WHITE}Verifier les prerequis{RESET}")
-    print(f"  {pipe}   {elbow} {GREEN}[7]{RESET} {WHITE}Lister les modules de scan{RESET}")
-    print(f"  {pipe}")
+    render_panel("Outils", [
+        ("6", "Vérifier les prérequis", False),
+        ("7", "Lister les modules", False),
+    ])
 
     # Section Projet
-    print(f"  {elbow} {BLUE}{BOLD}Projet{RESET}")
-    print(f"      {tee} {GREEN}[8]{RESET} {WHITE}Configuration{RESET}")
-    print(f"      {tee} {GREEN}[9]{RESET} {WHITE}Aide / A propos{RESET}")
-    print(f"      {elbow} {GREEN}[0]{RESET} {GRAY}Quitter{RESET}")
-
-    print()
+    render_panel("Projet", [
+        ("8", "Configuration", False),
+        ("9", "Aide / A propos", False),
+        ("0", "Quitter", True),
+    ])
 
 
 # display.py::Prompts ------------------------------------------------------------------#
 
-def get_prompt() -> str:
+def get_prompt(path: str = "~/menu") -> str:
     """Prompt principal style terminal cyber."""
     now = datetime.now().strftime("%H:%M:%S")
     return (
-        f"{COSIT_RED}[{DARK_GRAY}{now}{COSIT_RED}]{RESET} "
-        f"{GREEN}sec{RESET}{COSIT_RED}@{RESET}{CYAN}pipeline{RESET}"
-        f"{COSIT_RED}:{RESET}{BLUE}~/menu{RESET}"
-        f"{COSIT_RED}${RESET} "
+        f"{DIM_GREEN}[{DARK_GRAY}{now}{DIM_GREEN}]{RESET} "
+        f"{NEON_GREEN}sec{RESET}{DIM_GREEN}@{RESET}{CYAN}pipeline{RESET}"
+        f"{DIM_GREEN}:{RESET}{BLUE}{path}{RESET}"
+        f"{NEON_GREEN}${RESET} "
     )
 
 
 def get_path_prompt(default: str = ".") -> str:
     """Prompt de saisie d'un chemin."""
-    now = datetime.now().strftime("%H:%M:%S")
-    return (
-        f"{COSIT_RED}[{GRAY}{now}{COSIT_RED}]{RESET} "
-        f"{GREEN}sec{RESET}{COSIT_RED}@{RESET}{CYAN}pipeline{RESET}"
-        f"{COSIT_RED}:{RESET}{BLUE}~/scan{RESET}"
-        f"{COSIT_RED}${RESET} {GRAY}path [{default}]:{RESET} "
-        
-    )
+    return f"{get_prompt('~/scan')}{GRAY}path [{default}]:{RESET} "
 
 
-def get_continue_prompt() -> str:
+def get_continue_prompt(path: str = "~") -> str:
     """Prompt de pause."""
-    return f"\n  {DARK_GRAY}{BAR_H * 3}{RESET} {GRAY}Appuyez sur Entree pour continuer{RESET} {DARK_GRAY}{BAR_H * 3}{RESET}"
+    return f"\n{get_prompt(path)}{GRAY}[Entrée pour continuer]{RESET} "
 
 
 # display.py::Sections et titres ------------------------------------------------#
 
 def print_section(title: str) -> None:
     """Affiche un titre de section stylise."""
-    w = max(len(title) + 4, 30)
     print()
     print(f"  {CYAN}{BOLD}{ARROW_R}{RESET} {CYAN}{BOLD}{title}{RESET}")
-    print(f"  {CYAN}{BAR_H * w}{RESET}")
 
 
 def print_subsection(title: str) -> None:
@@ -337,10 +368,10 @@ def print_subsection(title: str) -> None:
 def print_stacks(stacks: list[str]) -> None:
     """Affiche les stacks detectees avec indicateurs visuels."""
     if not stacks:
-        print(f"  {DEB_RED}{CROSS} Aucune stack technologique detectee.{RESET}")
+        print(f"  {DEB_RED}{CROSS} Aucune stack technologique détectée.{RESET}")
         return
 
-    print(f"  {WHITE}Stacks detectees :{RESET}")
+    print(f"  {WHITE}Stacks détectées :{RESET}")
     for stack in stacks:
         print(f"    {GREEN}{CIRCLE_F}{RESET} {WHITE}{stack}{RESET}")
     print()
@@ -382,7 +413,7 @@ def _severity_bar(count: int, total: int, color: str, width: int = 20) -> str:
 
 def print_summary(stats: dict[str, int], total: int, duration: float) -> None:
     """Affiche le resume du scan avec barres visuelles."""
-    print_section("Resume du Scan")
+    print_section("Résumé du Scan")
     print()
 
     bar_width = 25
@@ -398,12 +429,12 @@ def print_summary(stats: dict[str, int], total: int, duration: float) -> None:
     print()
 
     if total == 0:
-        print(f"  {GREEN}{CHECK} Aucune vulnerabilite detectee.{RESET}")
+        print(f"  {GREEN}{CHECK} Aucune vulnérabilité détectée.{RESET}")
     else:
         color = DEB_RED if stats.get("critical", 0) > 0 else ORANGE if stats.get("high", 0) > 0 else YELLOW
-        print(f"  {color}{BOLD}Total: {total} vulnerabilite(s) detectee(s){RESET}")
+        print(f"  {color}{BOLD}Total: {total} vulnérabilité(s) détectée(s){RESET}")
 
-    print(f"  {GRAY}Duree: {duration:.2f}s{RESET}\n")
+    print(f"  {GRAY}Durée: {duration:.2f}s{RESET}\n")
 
 
 # display.py::Tableau de findings ------------------------------------------------#
@@ -413,7 +444,7 @@ def print_findings_table(findings: list) -> None:
     if not findings:
         return
 
-    print_section("Detail des Vulnerabilites")
+    print_section("Détail des Vulnérabilités")
     print()
 
     # En-tête
@@ -519,7 +550,7 @@ def print_last_report(report_path: str) -> None:
                 print(f"  {GRAY}{line}{RESET}")
             elif "CRITIQUE" in line or "critical" in line.lower():
                 print(f"  {DEB_RED}{line}{RESET}")
-            elif "ELEVE" in line or "high" in line.lower():
+            elif "ÉLEVÉ" in line or "high" in line.lower():
                 print(f"  {ORANGE}{line}{RESET}")
             else:
                 print(f"  {WHITE}{line}{RESET}")

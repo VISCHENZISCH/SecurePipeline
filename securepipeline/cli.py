@@ -59,24 +59,28 @@ def run_full_scan(path: str) -> None:
     start_time = time.time()
     module_results: dict[str, dict] = {}
 
-    for scanner in scanners:
-        info = scanner.info()
-        print_scanner_start(info.name)
+    from securepipeline.ui.widgets.progress_panel import ScanProgress
+    scanner_names = [s.info().name for s in scanners]
 
-        ok, missing = scanner.check_prerequisites()
-        if not ok:
-            print_scanner_skip(f"missing: {','.join(missing)}")
-            module_results[info.name] = {"status": "skip", "count": 0}
-            continue
+    with ScanProgress(scanner_names) as progress:
+        for scanner in scanners:
+            info = scanner.info()
+            progress.start_scanner(info.name)
 
-        try:
-            findings = scanner.scan(path)
-            all_findings.extend(findings)
-            print_scanner_done(len(findings))
-            module_results[info.name] = {"status": "ok", "count": len(findings)}
-        except Exception as e:
-            print(f" {DEB_RED}ERR: {e}{RESET}")
-            module_results[info.name] = {"status": "error", "count": 0}
+            ok, missing = scanner.check_prerequisites()
+            if not ok:
+                progress.finish_scanner(info.name, f"SKIP (missing: {','.join(missing)})")
+                module_results[info.name] = {"status": "skip", "count": 0}
+                continue
+
+            try:
+                findings = scanner.scan(path)
+                all_findings.extend(findings)
+                progress.finish_scanner(info.name, "OK")
+                module_results[info.name] = {"status": "ok", "count": len(findings)}
+            except Exception as e:
+                progress.finish_scanner(info.name, "ERR")
+                module_results[info.name] = {"status": "error", "count": 0}
 
     duration = time.time() - start_time
 
@@ -199,7 +203,7 @@ def check_all_prerequisites() -> None:
     for tool, used_by in sorted(all_tools.items()):
         installed = check_tool(tool)
         if installed:
-            print(f"  {GREEN}{CHECK}{RESET} {WHITE}{tool:<20}{RESET} {GRAY}{DOT} {', '.join(used_by)}{RESET}")
+            print(f"  {GREEN}{CHECK} {WHITE}{tool:<20}{RESET} {GRAY}{DOT} {', '.join(used_by)}{RESET}")
             ok_count += 1
         else:
             print(f"  {DEB_RED}{CROSS}{RESET} {WHITE}{tool:<20}{RESET} {GRAY}{DOT} {', '.join(used_by)}{RESET}")
@@ -207,7 +211,7 @@ def check_all_prerequisites() -> None:
 
     print()
     if missing_count == 0:
-        print_status("Tous les outils sont installes.", "success")
+        print_status("Tous les outils sont installés.", "success")
     else:
         print_status(f"{missing_count} outil(s) manquant(s) sur {ok_count + missing_count}.", "warning")
     print()
@@ -216,6 +220,7 @@ def check_all_prerequisites() -> None:
 def list_all_modules() -> None:
     """Affiche la liste de tous les modules de scan disponibles."""
     from securepipeline.modules import STACK_SCANNERS, GLOBAL_SCANNERS
+    from securepipeline.ui.widgets.module_tree import TREE_TEE, TREE_ELBOW, TREE_PIPE, TREE_BLANK
 
     print_section("Modules de scan disponibles")
     print()
@@ -223,20 +228,28 @@ def list_all_modules() -> None:
     # Modules par stack
     for stack, scanner_classes in sorted(STACK_SCANNERS.items()):
         print(f"  {CYAN}{BOLD}{stack.upper()}{RESET}")
-        for scanner_cls in scanner_classes:
+        for i, scanner_cls in enumerate(scanner_classes):
             info = scanner_cls().info()
             tools = ", ".join(info.tools_required) if info.tools_required else "aucun"
-            print(f"    {DOT} {WHITE}{info.name}{RESET}  {GRAY}{DOT} outils: {tools}{RESET}")
-            print(f"      {GRAY}{info.description}{RESET}")
+            is_last = (i == len(scanner_classes) - 1)
+            connector = TREE_ELBOW if is_last else TREE_TEE
+            continuation = TREE_BLANK if is_last else TREE_PIPE
+            
+            print(f"    {connector}{WHITE}{info.name}{RESET}  {GRAY}{DOT} outils: {tools}{RESET}")
+            print(f"    {continuation}{GRAY}{info.description}{RESET}")
         print()
 
     # Modules globaux
     print(f"  {CYAN}{BOLD}GLOBAL{RESET}")
-    for scanner_cls in GLOBAL_SCANNERS:
+    for i, scanner_cls in enumerate(GLOBAL_SCANNERS):
         info = scanner_cls().info()
         tools = ", ".join(info.tools_required) if info.tools_required else "aucun"
-        print(f"    {DOT} {WHITE}{info.name}{RESET}  {GRAY}{DOT} outils: {tools}{RESET}")
-        print(f"      {GRAY}{info.description}{RESET}")
+        is_last = (i == len(GLOBAL_SCANNERS) - 1)
+        connector = TREE_ELBOW if is_last else TREE_TEE
+        continuation = TREE_BLANK if is_last else TREE_PIPE
+            
+        print(f"    {connector}{WHITE}{info.name}{RESET}  {GRAY}{DOT} outils: {tools}{RESET}")
+        print(f"    {continuation}{GRAY}{info.description}{RESET}")
     print()
 
 
@@ -244,12 +257,12 @@ def show_about() -> None:
     """Affiche les informations sur l'outil."""
     from securepipeline import __version__, __author__
 
-    print_section("A propos de SecurePipeline")
+    print_section("À propos de SecurePipeline")
     print()
     print(f"  {WHITE}Version      {GRAY}{DOT}{RESET} {CYAN}{__version__}{RESET}")
     print(f"  {WHITE}Auteur       {GRAY}{DOT}{RESET} {CYAN}{__author__}{RESET}")
     print(f"  {WHITE}Langage      {GRAY}{DOT}{RESET} {CYAN}Python{RESET}")
-    print(f"  {WHITE}Licence      {GRAY}{DOT}{RESET} {CYAN}Usage interne COSIT BENIN{RESET}")
+    print(f"  {WHITE}Licence      {GRAY}{DOT}{RESET} {CYAN}Usage interne COSIT BÉNIN{RESET}")
     print()
 
     print(f"  {BLUE}{BOLD}Commandes CLI :{RESET}")
@@ -269,7 +282,7 @@ def show_config() -> None:
     """Affiche et permet de modifier la configuration."""
     print_config(_config)
 
-    print(f"  {WHITE}Modifier le seuil d'echec ?{RESET}")
+    print(f"  {WHITE}Modifier le seuil d'échec ?{RESET}")
     print(f"    {CYAN}[1]{RESET} {WHITE}critical{RESET}")
     print(f"    {CYAN}[2]{RESET} {WHITE}high{RESET}")
     print(f"    {CYAN}[3]{RESET} {WHITE}medium{RESET}")
@@ -285,9 +298,9 @@ def show_config() -> None:
     threshold_map = {"1": "critical", "2": "high", "3": "medium", "4": "low"}
     if choice in threshold_map:
         _config.fail_on = threshold_map[choice]
-        print_status(f"Seuil d'echec mis a jour: {_config.fail_on}", "success")
+        print_status(f"Seuil d'échec mis à jour: {_config.fail_on}", "success")
     elif choice != "0":
-        print_status("Configuration inchangee.", "info")
+        print_status("Configuration inchangée.", "info")
 
 
 def show_cicd_example() -> None:
@@ -297,7 +310,7 @@ def show_cicd_example() -> None:
     print(f"  {WHITE}Mode headless (pipeline) :{RESET}")
     print(f"  {GREEN}securepipeline --scan . --fail-on critical{RESET}")
     print()
-    print(f"  {WHITE}Avec generation HTML :{RESET}")
+    print(f"  {WHITE}Avec génération HTML :{RESET}")
     print(f"  {GREEN}securepipeline --scan . --fail-on critical --output html{RESET}")
     print()
     print(f"  {WHITE}GitHub Actions :{RESET}")
@@ -324,40 +337,40 @@ def interactive_loop():
         elif choice in ["1", "01"]:
             path = input(get_path_prompt()).strip() or "."
             run_full_scan(path)
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/scan"))
 
         elif choice in ["2", "02"]:
             path = input(get_path_prompt()).strip() or "."
             detect_stacks_only(path)
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/scan/detect"))
 
         elif choice in ["3", "03"]:
             show_cicd_example()
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/scan/cicd"))
 
         elif choice in ["4", "04"]:
             view_last_report()
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/reports/view"))
 
         elif choice in ["5", "05"]:
             generate_html_report()
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/reports/html"))
 
         elif choice in ["6", "06"]:
             check_all_prerequisites()
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/outils/prérequis"))
 
         elif choice in ["7", "07"]:
             list_all_modules()
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/outils/modules"))
 
         elif choice in ["8", "08"]:
             show_config()
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/projet/config"))
 
         elif choice in ["9", "09"]:
             show_about()
-            input(get_continue_prompt())
+            input(get_continue_prompt("~/projet/about"))
 
         else:
             if choice:
@@ -365,7 +378,7 @@ def interactive_loop():
                 import subprocess
                 print()
                 subprocess.run(choice, shell=True)
-                input(get_continue_prompt())
+                input(get_continue_prompt("~/shell"))
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
