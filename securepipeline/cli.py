@@ -317,6 +317,29 @@ def show_cicd_example() -> None:
     print()
 
 
+def update_project() -> None:
+    """Met à jour le projet (git pull)."""
+    print_section("Mise à jour du projet")
+    print()
+    import subprocess
+    try:
+        print_status("Récupération de la dernière version (git pull)...", "info")
+        res = subprocess.run("git pull", shell=True, capture_output=True, text=True)
+        if res.returncode == 0:
+            print_status("Mise à jour terminée avec succès.", "success")
+            if res.stdout:
+                for line in res.stdout.strip().split("\n"):
+                    print(f"  {GRAY}{line}{RESET}")
+        else:
+            print_status("Impossible de mettre à jour le projet via git.", "error")
+            if res.stderr:
+                for line in res.stderr.strip().split("\n"):
+                    print(f"  {DEB_RED}{line}{RESET}")
+    except Exception as e:
+        print_status(f"Erreur inattendue : {e}", "error")
+    print()
+
+
 def interactive_loop():
     """Boucle du menu interactif."""
     while True:
@@ -370,6 +393,10 @@ def interactive_loop():
         elif choice in ["9", "09"]:
             show_about()
             input(get_continue_prompt("~/projet/about"))
+
+        elif choice.lower() == "u":
+            update_project()
+            input(get_continue_prompt("~/projet/update"))
 
         else:
             if choice:

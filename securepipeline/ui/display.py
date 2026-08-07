@@ -241,91 +241,87 @@ def print_home_screen() -> None:
     #print(heavy_hline(w, DARK_GRAY))
     print()
 
-    # Informations système dans un cadre
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cwd = os.path.basename(os.getcwd()) or "."
-
-    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Projet   {RESET} {GRAY}{BOX_V}{RESET} {CYAN}{cwd}{RESET}")
-    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Mode     {RESET} {GRAY}{BOX_V}{RESET} {CYAN}interactif{RESET}")
-    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Rapports {RESET} {GRAY}{BOX_V}{RESET} {CYAN}reports{RESET}")
-    print(f"  {DIM_GREEN}{CIRCLE_F}{RESET} {WHITE}Date     {RESET} {GRAY}{BOX_V}{RESET} {CYAN}{now}{RESET}")
-    print()
-
 
 # display.py::Menu principal ──────────────────────────────────────────────────────────
 
 def print_menu() -> None:
-    """Affiche le menu interactif en style panneaux arrondis avec dégradé horizontal."""
+    """Affiche le menu interactif sous forme d'arborescence."""
     
-    width = 32
+    sections = [
+        ("Scan", [
+            ("1", "Scanner un projet", False),
+            ("2", "Détecter les stacks", False),
+            ("3", "Exemple CI/CD", False),
+        ]),
+        ("Rapports", [
+            ("4", "Voir le dernier rapport", False),
+            ("5", "Générer un rapport HTML", False),
+        ]),
+        ("Outils", [
+            ("6", "Vérifier les prérequis", False),
+            ("7", "Lister les modules", False),
+        ]),
+        ("Projet", [
+            ("8", "Configuration", False),
+            ("9", "Aide / A propos", False),
+            ("u", "Obtenir la dernière version", False),
+            ("0", "Quitter", True),
+        ])
+    ]
 
-    def render_panel(title: str, items: list) -> None:
-        def c(x: int) -> str:
-            # Dégradé RGB horizontal: Rouge (171, 4, 21) -> Orange (255, 107, 53)
-            f = x / max(1, width - 1)
-            r = int(171 + (255 - 171) * f)
-            g = int(4 + (107 - 4) * f)
-            b = int(21 + (53 - 21) * f)
-            return f"\033[38;2;{r};{g};{b}m"
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cwd = os.path.basename(os.getcwd()) or "."
 
-        top_bar = BOX_H * (width - 5 - len(title))
+    print(f"  {ORANGE}>{RESET} {WHITE}Projet   {RESET} {CYAN}{cwd}{RESET}")
+    print(f"  {ORANGE}>{RESET} {WHITE}Date     {RESET} {CYAN}{now}{RESET}")
+    print(f"  {ORANGE}>{RESET} {WHITE}GitHub   {RESET} {CYAN}https://github.com/VISCHENZISCH/SecurePipeline.git{RESET}")
+    print()
+
+    DBL_LT = "\u2560"  # ╠
+    BRANCH_COLOR = DARK_GRAY
+    
+    for i, (title, items) in enumerate(sections):
+        is_last_section = (i == len(sections) - 1)
         
-        # Ligne du haut
-        out = "  " + c(0) + "╭" + c(1) + "─" + c(2) + " "
-        out += f"{BLUE}{BOLD}{title}{RESET}"
+        main_branch = f"{DBL_BL}{DBL_H}{DBL_H}" if is_last_section else f"{DBL_LT}{DBL_H}{DBL_H}"
         
-        start_x = 3 + len(title)
-        out += c(start_x) + " "
-        for i in range(len(top_bar)):
-            out += c(start_x + 1 + i) + BOX_H
-        out += c(width - 1) + "╮" + RESET
-        print(out)
+        print(f"  {BRANCH_COLOR}{main_branch}{RESET} {BLUE}{BOLD}{title}{RESET}")
         
-        # Éléments
-        for key, text, is_quit in items:
-            key_color = GREEN if not is_quit else GRAY
-            text_color = WHITE if not is_quit else GRAY
+        for j, (key, text, is_quit) in enumerate(items):
+            is_last_item = (j == len(items) - 1)
             
-            line_str = f"[{key}] {text}"
-            pad = width - 4 - len(line_str)
+            sub_branch = f"{BOX_BL}{BOX_H}{BOX_H}" if is_last_item else f"{BOX_LT}{BOX_H}{BOX_H}"
             
-            # Bordures gauche (x=0) et droite (x=width-1)
-            out_line = f"  {c(0)}│{RESET} {key_color}[{key}]{RESET} {text_color}{text}{RESET}{' ' * pad} {c(width-1)}│{RESET}"
-            print(out_line)
+            if is_quit:
+                key_str = f"{GRAY}[{key}]{RESET}"
+                text_color = GRAY
+            else:
+                key_str = f"{DARK_GRAY}[{RESET}{CYAN}{BOLD}{key}{RESET}{DARK_GRAY}]{RESET}"
+                text_color = WHITE
             
-        # Ligne du bas
-        out_bot = "  " + c(0) + "╰"
-        for i in range(1, width - 1):
-            out_bot += c(i) + BOX_H
-        out_bot += c(width - 1) + "╯" + RESET
-        print(out_bot)
-        print()
+            indent = "   " if is_last_section else f"{BRANCH_COLOR}{DBL_V}{RESET}  "
+            
+            print(f"  {indent}{BRANCH_COLOR}{sub_branch}{RESET} {key_str} {text_color}{text}{RESET}")
+            
+    print()
 
-    # Section Scan
-    render_panel("Scan", [
-        ("1", "Scanner un projet", False),
-        ("2", "Détecter les stacks", False),
-        ("3", "Exemple CI/CD", False),
-    ])
+    # Informations Client (en dessous des branches)
+    import platform
+    import getpass
+    import sys
+    
+    os_info = f"{platform.system()} {platform.release()}"
+    try:
+        user_name = getpass.getuser()
+    except Exception:
+        user_name = "unknown"
+        
+    py_version = f"Python {sys.version_info.major}.{sys.version_info.minor}"
 
-    # Section Rapports
-    render_panel("Rapports", [
-        ("4", "Voir le dernier rapport", False),
-        ("5", "Générer un rapport HTML", False),
-    ])
-
-    # Section Outils
-    render_panel("Outils", [
-        ("6", "Vérifier les prérequis", False),
-        ("7", "Lister les modules", False),
-    ])
-
-    # Section Projet
-    render_panel("Projet", [
-        ("8", "Configuration", False),
-        ("9", "Aide / A propos", False),
-        ("0", "Quitter", True),
-    ])
+    print(f"  {ORANGE}>{RESET} {WHITE}User     {RESET} {CYAN}{user_name}{RESET}")
+    print(f"  {ORANGE}>{RESET} {WHITE}OS       {RESET} {CYAN}{os_info}{RESET}")
+    print(f"  {ORANGE}>{RESET} {WHITE}Runtime  {RESET} {CYAN}{py_version}{RESET}")
+    print()
 
 
 # display.py::Prompts ------------------------------------------------------------------#
@@ -334,9 +330,9 @@ def get_prompt(path: str = "~/menu") -> str:
     """Prompt principal style terminal cyber."""
     now = datetime.now().strftime("%H:%M:%S")
     return (
-        f"{DIM_GREEN}[{LIGHT_YELLOW_WHITE}{now}{DIM_GREEN}]{RESET} "
-        f"{NEON_GREEN}sec{RESET}{DIM_GREEN}@{RESET}{CYAN}pipeline{RESET}"
-        f"{DIM_GREEN}:{RESET}{BLUE}{path}{RESET}"
+        f"{DEB_RED}[{RESET}{YELLOW}{now}{DEB_RED}]{RESET} "
+        f"{NEON_GREEN}sec{RESET}{DEB_RED}@{RESET}{CYAN}pipeline{RESET}"
+        f"{DEB_RED}:{RESET}{BLUE}{path}{RESET}"
         f"{NEON_GREEN}${RESET} "
     )
 
