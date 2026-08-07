@@ -1,8 +1,8 @@
 """SecurePipeline - Générateur de rapports Markdown/HTML."""
 
-from pathlib import Path
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
 
 from securepipeline.core.models import ScanResult, Severity
 

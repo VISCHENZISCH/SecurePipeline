@@ -1,9 +1,16 @@
 """SecurePipeline - Widget de badges de severite."""
 
 from securepipeline.ui.display import (
-    RESET, BOLD,
-    SEV_COLORS, SEV_BG, SEV_LABELS, SEV_INDICATORS,
-    WHITE, GRAY, DARK_GRAY, BOX_H,
+    BOLD,
+    BOX_H,
+    DARK_GRAY,
+    GRAY,
+    RESET,
+    SEV_BG,
+    SEV_COLORS,
+    SEV_INDICATORS,
+    SEV_LABELS,
+    WHITE,
 )
 
 

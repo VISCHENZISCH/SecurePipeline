@@ -1,11 +1,10 @@
 """SecurePipeline - Generateur de rapports HTML autonome."""
 
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 
 from securepipeline.core.models import ScanResult, Severity
-
 
 # ─── Template CSS Dark Theme ─────────────────────────────────────────────────
 

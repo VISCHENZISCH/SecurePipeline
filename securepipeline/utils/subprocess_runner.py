@@ -3,7 +3,7 @@
 import json
 import shutil
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from securepipeline.utils.logger import log

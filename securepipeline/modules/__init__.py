@@ -1,12 +1,12 @@
 """SecurePipeline - Registre des modules de scan."""
 
 from securepipeline.modules.base import BaseScanner
-from securepipeline.modules.python_scanner import PythonScanner
+from securepipeline.modules.docker_scanner import DockerScanner
+from securepipeline.modules.flutter_scanner import FlutterScanner
+from securepipeline.modules.k8s_scanner import K8sScanner
 from securepipeline.modules.node_scanner import NodeScanner
 from securepipeline.modules.php_scanner import PhpScanner
-from securepipeline.modules.flutter_scanner import FlutterScanner
-from securepipeline.modules.docker_scanner import DockerScanner
-from securepipeline.modules.k8s_scanner import K8sScanner
+from securepipeline.modules.python_scanner import PythonScanner
 from securepipeline.modules.secrets_scanner import SecretsScanner
 
 # Registre stack vers scanners
@@ -55,8 +55,8 @@ def get_scanners_for_stacks(stacks: list[str]) -> list[BaseScanner]:
 
 
 __all__ = [
-    "BaseScanner",
-    "STACK_SCANNERS",
     "GLOBAL_SCANNERS",
+    "STACK_SCANNERS",
+    "BaseScanner",
     "get_scanners_for_stacks",
 ]

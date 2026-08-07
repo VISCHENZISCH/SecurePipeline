@@ -305,10 +305,10 @@ def print_menu() -> None:
     print()
 
     # Informations Client (en dessous des branches)
-    import platform
     import getpass
-    import sys
+    import platform
     import socket
+    import sys
     
     os_info = f"{platform.system()} {platform.release()}"
     try:

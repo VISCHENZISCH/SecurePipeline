@@ -4,11 +4,10 @@ Ce module encapsule la logique de generation de rapports Markdown
 extraite de generator.py pour une meilleure separation des responsabilites.
 """
 
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
 
-from securepipeline.core.models import ScanResult, Severity
-
+from securepipeline.core.models import ScanResult
 
 _SEV_ORDER = ["critical", "high", "medium", "low", "info"]
 _SEV_FR = {

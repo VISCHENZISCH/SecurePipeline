@@ -3,6 +3,7 @@
 import logging
 import sys
 
+
 def get_logger(name: str = "securepipeline", level: int = logging.WARNING) -> logging.Logger:
     """Cree un logger basique.
 

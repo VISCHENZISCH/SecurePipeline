@@ -1,7 +1,8 @@
 """SecurePipeline - Orchestrateur de scans."""
 
 import time
-from securepipeline.core.models import ScanResult, Finding
+
+from securepipeline.core.models import Finding, ScanResult
 from securepipeline.modules import get_scanners_for_stacks
 from securepipeline.utils.logger import log
 

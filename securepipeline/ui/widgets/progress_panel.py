@@ -1,15 +1,25 @@
 """SecurePipeline - Widget de progression animee."""
 
 import sys
-import time
 import threading
+import time
 
 from securepipeline.ui.display import (
-    RESET, BOLD, DIM,
-    CYAN, GREEN, GRAY, WHITE, DARK_GRAY, YELLOW, DIM_GREEN, DEB_RED,
-    BLOCK_FULL, BLOCK_LIGHT, BAR_H, DOT, CHECK,
+    BLOCK_FULL,
+    BLOCK_LIGHT,
+    BOLD,
+    CHECK,
+    CYAN,
+    DARK_GRAY,
+    DEB_RED,
+    DIM_GREEN,
+    DOT,
+    GRAY,
+    GREEN,
+    RESET,
+    WHITE,
+    YELLOW,
 )
-
 
 # Frames d'animation du spinner
 SPINNER_FRAMES = ["[    ]", "[=   ]", "[==  ]", "[=== ]", "[ ===]", "[  ==]", "[   =]", "[    ]"]

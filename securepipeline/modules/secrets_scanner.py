@@ -2,10 +2,11 @@
 
 import json
 from pathlib import Path
+
 from securepipeline.core.models import Finding, Severity
 from securepipeline.modules.base import BaseScanner, ScannerInfo
 from securepipeline.utils.logger import log
-from securepipeline.utils.subprocess_runner import run_command, check_tool
+from securepipeline.utils.subprocess_runner import check_tool, run_command
 
 
 class SecretsScanner(BaseScanner):

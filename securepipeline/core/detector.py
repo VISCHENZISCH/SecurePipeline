@@ -1,6 +1,5 @@
 """SecurePipeline - Détecteur de stacks technologiques."""
 
-import os
 from pathlib import Path
 
 # Signatures de détection

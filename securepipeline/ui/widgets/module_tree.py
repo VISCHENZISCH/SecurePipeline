@@ -1,12 +1,23 @@
 """SecurePipeline - Widget d'arbre des modules de scan."""
 
 from securepipeline.ui.display import (
-    RESET, BOLD,
-    CYAN, GREEN, GRAY, WHITE, DARK_GRAY, DEB_RED, DIM_GREEN,
-    BOX_V, BOX_H, BOX_TL, BOX_BL, BOX_LT,
-    CIRCLE_F, CIRCLE_E, CHECK, CROSS, DIAMOND,
+    BOLD,
+    BOX_BL,
+    BOX_H,
+    BOX_LT,
+    BOX_V,
+    CHECK,
+    CIRCLE_E,
+    CIRCLE_F,
+    CROSS,
+    CYAN,
+    DEB_RED,
+    DIAMOND,
+    GRAY,
+    GREEN,
+    RESET,
+    WHITE,
 )
-
 
 # Dégradé rouge -> orange pour les branches
 _C1 = "\033[38;2;171;4;21m"

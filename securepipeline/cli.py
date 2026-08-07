@@ -1,36 +1,40 @@
 """SecurePipeline - CLI """
 
 import os
-import sys
 import time
 from collections import defaultdict
 
 import click
 
 from securepipeline import __version__
-from securepipeline.core.detector import detect_stacks
 from securepipeline.core.config import Config
+from securepipeline.core.detector import detect_stacks
 from securepipeline.ui.display import (
+    BLUE,
+    BOLD,
+    CHECK,
+    CROSS,
+    CYAN,
+    DARK_GRAY,
+    DEB_RED,
+    DOT,
+    GRAY,
+    GREEN,
+    RESET,
+    WHITE,
     clear_screen,
-    print_home_screen,
-    print_menu,
-    get_prompt,
-    get_path_prompt,
     get_continue_prompt,
+    get_path_prompt,
+    get_prompt,
+    print_config,
+    print_findings_table,
+    print_home_screen,
+    print_last_report,
+    print_menu,
     print_section,
     print_stacks,
-    print_scanner_start,
-    print_scanner_done,
-    print_scanner_skip,
-    print_summary,
-    print_findings_table,
-    print_config,
-    print_last_report,
     print_status,
-    print_banner,
-    typing_print,
-    DEB_RED, GREEN, CYAN, BLUE, WHITE, GRAY, DARK_GRAY, ORANGE, RESET, BOLD,
-    CHECK, CROSS, DOT,
+    print_summary,
 )
 
 # Configuration globale (mutable pendant la session)
@@ -78,7 +82,7 @@ def run_full_scan(path: str) -> None:
                 all_findings.extend(findings)
                 progress.finish_scanner(info.name, "OK")
                 module_results[info.name] = {"status": "ok", "count": len(findings)}
-            except Exception as e:
+            except Exception:
                 progress.finish_scanner(info.name, "ERR")
                 module_results[info.name] = {"status": "error", "count": 0}
 
@@ -97,8 +101,8 @@ def run_full_scan(path: str) -> None:
     print_findings_table(all_findings)
 
     # Generer le rapport Markdown automatiquement
-    from securepipeline.report.generator import generate_markdown, save_report
     from securepipeline.core.models import ScanResult
+    from securepipeline.report.generator import generate_markdown, save_report
 
     result = ScanResult(findings=all_findings, stacks_scanned=stacks, duration_seconds=duration)
     md_report = generate_markdown(result, path, project_name=os.path.basename(os.path.abspath(path)))
@@ -115,8 +119,8 @@ def view_last_report(path: str = ".") -> None:
 
 def generate_html_report(path: str = ".") -> None:
     """Genere un rapport HTML a partir du dernier scan."""
+    from securepipeline.core.models import Finding, ScanResult
     from securepipeline.report.html_report import generate_html, save_html_report
-    from securepipeline.core.models import ScanResult, Finding
 
     report_md_path = os.path.join(path, ".securepipeline", "reports", "securepipeline-report.md")
 
@@ -176,7 +180,7 @@ def detect_stacks_only(path: str = ".") -> None:
 
 def check_all_prerequisites() -> None:
     """Verifie que tous les outils externes requis sont installes."""
-    from securepipeline.modules import STACK_SCANNERS, GLOBAL_SCANNERS
+    from securepipeline.modules import GLOBAL_SCANNERS, STACK_SCANNERS
 
     print_section("Verification des prerequis")
     print()
@@ -219,8 +223,8 @@ def check_all_prerequisites() -> None:
 
 def list_all_modules() -> None:
     """Affiche la liste de tous les modules de scan disponibles."""
-    from securepipeline.modules import STACK_SCANNERS, GLOBAL_SCANNERS
-    from securepipeline.ui.widgets.module_tree import TREE_TEE, TREE_ELBOW, TREE_PIPE, TREE_BLANK
+    from securepipeline.modules import GLOBAL_SCANNERS, STACK_SCANNERS
+    from securepipeline.ui.widgets.module_tree import TREE_BLANK, TREE_ELBOW, TREE_PIPE, TREE_TEE
 
     print_section("Modules de scan disponibles")
     print()
@@ -255,7 +259,7 @@ def list_all_modules() -> None:
 
 def show_about() -> None:
     """Affiche les informations sur l'outil."""
-    from securepipeline import __version__, __author__
+    from securepipeline import __author__
 
     print_section("À propos de SecurePipeline")
     print()
@@ -323,7 +327,7 @@ def update_project() -> None:
     print()
     import subprocess
     try:
-        print_status("Récupération de la dernière version (git pull)...", "info")
+        print_status("Récupération de la dernière version ...", "info")
         res = subprocess.run("git pull", shell=True, capture_output=True, text=True)
         if res.returncode == 0:
             print_status("Mise à jour terminée avec succès.", "success")
@@ -402,6 +406,7 @@ def interactive_loop():
             if choice:
                 # Execute la commande comme un terminal
                 import subprocess
+
                 from securepipeline.ui.display import DEB_RED, RESET
                 print()
                 try:
@@ -437,7 +442,6 @@ def cli(scan_path, fail_on, output):
             generate_html_report(scan_path)
 
         # Exit code basé sur les findings
-        from securepipeline.core.models import ScanResult
         # Le run_full_scan ne retourne pas le result,
         # mais pour le CI/CD on check via le rapport
     else:
