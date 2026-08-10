@@ -1,0 +1,48 @@
+# docker-compose.yml — SecurePipeline (usage local)
+#
+# Usage :
+#   docker compose run --rm scanner scan /project
+#   docker compose run --rm scanner scan /project --fail-on critical
+#
+# Le dossier courant est monté en /project (lecture seule).
+# Les rapports sont écrits dans ./.securepipeline/reports/ sur l'hôte.
+
+version: "3.9"
+
+services:
+  scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: securepipeline:latest
+    container_name: securepipeline
+
+    # Monte le projet à analyser (lecture seule) + dossier de sortie des rapports
+    volumes:
+      - type: bind
+        source: .
+        target: /project
+        read_only: true
+      - type: bind
+        source: ./.securepipeline/reports
+        target: /project/.securepipeline/reports
+        read_only: false
+
+    working_dir: /project
+
+    # Commande par défaut : scan du projet monté
+    command: ["scan", "/project"]
+
+    # Variables d'environnement de configuration
+    environment:
+      - SECUREPIPELINE_LOG_LEVEL=INFO
+      - SECUREPIPELINE_FAIL_ON=critical
+
+    # Sécurité conteneur : lecture seule sauf le dossier de rapports
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL

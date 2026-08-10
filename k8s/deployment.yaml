@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: securepipeline
+  namespace: devsecops
+  labels:
+    app: securepipeline
+    version: "1.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: securepipeline
+  template:
+    metadata:
+      labels:
+        app: securepipeline
+    spec:
+      # ── Sécurité au niveau du Pod ──────────────────────────────────────────
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+
+      # Pas de token ServiceAccount automatique (pas d'accès API K8s nécessaire)
+      automountServiceAccountToken: false
+
+      containers:
+        - name: securepipeline
+          image: securepipeline:latest
+          imagePullPolicy: IfNotPresent
+
+          # Commande par défaut : scan en mode headless sur /project
+          command: ["securepipeline", "scan", "/project", "--fail-on", "critical"]
+
+          # Variables de configuration depuis le ConfigMap
+          envFrom:
+            - configMapRef:
+                name: securepipeline-config
+
+          # ── Sécurité au niveau du Conteneur ──────────────────────────────
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+
+          # ── Limites de ressources (obligatoire pour kube-score) ───────────
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+
+          # ── Volumes ───────────────────────────────────────────────────────
+          volumeMounts:
+            # Répertoire de travail temporaire (requis car rootFilesystem en lecture seule)
+            - name: tmp-dir
+              mountPath: /tmp
+            # Dossier de sortie des rapports
+            - name: reports-dir
+              mountPath: /reports
+            # Projet à analyser — monté via PVC ou hostPath selon l'environnement
+            - name: project-dir
+              mountPath: /project
+              readOnly: true
+
+      volumes:
+        - name: tmp-dir
+          emptyDir: {}
+        - name: reports-dir
+          emptyDir: {}
+        - name: project-dir
+          # Remplacez par un PersistentVolumeClaim en production
+          emptyDir: {}
+
+      # Évite que le conteneur redémarre indéfiniment (il s'arrête après le scan)
+      restartPolicy: Never

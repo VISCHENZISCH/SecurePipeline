@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: securepipeline-config
+  namespace: devsecops
+  labels:
+    app: securepipeline
+    component: config
+data:
+  # Niveau de log : DEBUG | INFO | WARNING | ERROR
+  LOG_LEVEL: "INFO"
+
+  # Seuil de sévérité déclenchant un exit code 1 (critical | high | medium | low)
+  FAIL_ON: "critical"
+
+  # Chemin de sortie des rapports à l'intérieur du conteneur
+  REPORT_DIR: "/reports"
+
+  # Format du rapport généré : markdown | html | both
+  REPORT_FORMAT: "both"

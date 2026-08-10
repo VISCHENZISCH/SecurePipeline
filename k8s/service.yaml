@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: securepipeline
+  namespace: devsecops
+  labels:
+    app: securepipeline
+spec:
+  # ClusterIP : accessible uniquement à l'intérieur du cluster
+  # SecurePipeline est un outil CLI — pas d'exposition externe intentionnelle
+  type: ClusterIP
+  selector:
+    app: securepipeline
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
