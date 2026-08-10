@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from securepipeline.core.models import ScanResult, Severity
+from securepipeline import __version__
 
 # ─── Template CSS Dark Theme ─────────────────────────────────────────────────
 
@@ -432,7 +433,7 @@ def generate_html(result: ScanResult, path: str, project_name: str = "Projet") -
         {sections_html}
 
         <div class="footer">
-            SecurePipeline v0.1.0 &mdash; Rapport genere le {date_str}
+            SecurePipeline v{__version__} &mdash; Rapport genere le {date_str}
         </div>
     </div>
 </body>

@@ -7,6 +7,8 @@ import sys
 import time
 from datetime import datetime
 
+from securepipeline import __version__
+
 # Codes ANSI / True Color 
 
 RESET   = "\033[0m"
@@ -110,7 +112,7 @@ LOGO_GRADIENT = [
 ]
 
 SUBTITLE_TEXT = "Scanner DevSecOps multi-stack"
-VERSION_LINE  = "v0.1.0"
+VERSION_LINE  = f"v{__version__}"
 
 
 # display.py::Utilitaires de base ---------------------------------------------------------#

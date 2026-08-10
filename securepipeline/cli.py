@@ -1,6 +1,7 @@
 """SecurePipeline - CLI """
 
 import os
+import sys
 import time
 from collections import defaultdict
 
@@ -429,36 +430,43 @@ def interactive_loop():
                 input(get_continue_prompt("~/shell"))
 
 
-@click.command(context_settings=dict(ignore_unknown_options=True))
-@click.option("--scan", "scan_path", type=click.Path(exists=True), help="Chemin du projet a scanner (mode headless).")
-@click.option("--fail-on", type=click.Choice(["critical", "high", "medium", "low"]), default="critical",
-              help="Seuil d'echec pour le mode CI/CD.")
-@click.option("--output", type=click.Choice(["md", "html", "both"]), default="md",
-              help="Format de sortie du rapport.")
-def cli(scan_path, fail_on, output):
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
     """SecurePipeline -- Scanner de securite multi-stack DevSecOps."""
-
-    if scan_path:
-        # Mode headless (CI/CD)
-        _config.fail_on = fail_on
-        _config.output_format = output
-
-        result = run_full_scan(scan_path)
-
-        if output in ("html", "both"):
-            generate_html_report(scan_path)
-
-        # Exit code basé sur les findings
-        exit_code = result.exit_code(fail_on)
-        if exit_code != 0:
-            print_status(
-                f"Échec : des vulnérabilités >= '{fail_on}' ont été détectées.",
-                "error",
-            )
-        sys.exit(exit_code)
-    else:
+    if ctx.invoked_subcommand is None:
         # Mode interactif par defaut
         interactive_loop()
+
+
+@cli.command()
+@click.argument("path", type=click.Path(exists=True))
+@click.option("--fail-on", type=click.Choice(["critical", "high", "medium", "low"]), default="critical",
+              help="Seuil d'echec pour le mode CI/CD.")
+@click.option("--format", "output_format", type=click.Choice(["md", "markdown", "html", "both"]), default="md",
+              help="Format de sortie du rapport (md, html, both).")
+def scan(path, fail_on, output_format):
+    """Lance un scan de securite sur le projet (mode headless)."""
+    # Normaliser "markdown" -> "md"
+    if output_format == "markdown":
+        output_format = "md"
+
+    _config.fail_on = fail_on
+    _config.output_format = output_format
+
+    result = run_full_scan(path)
+
+    if output_format in ("html", "both"):
+        generate_html_report(path)
+
+    # Exit code basé sur les findings
+    exit_code = result.exit_code(fail_on)
+    if exit_code != 0:
+        print_status(
+            f"Échec : des vulnérabilités >= '{fail_on}' ont été détectées.",
+            "error",
+        )
+    sys.exit(exit_code)
 
 
 def main():

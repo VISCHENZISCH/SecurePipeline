@@ -9,6 +9,7 @@ from securepipeline.utils.logger import log
 from securepipeline.utils.subprocess_runner import check_tool, run_command
 
 
+# modules.docker_scanner::docker_scanner------------------------------------------------#   
 class DockerScanner(BaseScanner):
     """Scanner pour Dockerfiles et images Docker (Trivy, Hadolint)."""
 
@@ -26,9 +27,8 @@ class DockerScanner(BaseScanner):
         dockerfiles = self._find_dockerfiles(path)
         for df in dockerfiles:
             findings.extend(self._run_hadolint(df))
-            findings.extend(self._run_trivy_fs(path))
-        if not dockerfiles:
-            findings.extend(self._run_trivy_fs(path))
+        # Trivy FS scanne le répertoire entier — une seule exécution suffit
+        findings.extend(self._run_trivy_fs(path))
         return findings
 
     def _find_dockerfiles(self, path: str) -> list[str]:
@@ -60,7 +60,7 @@ class DockerScanner(BaseScanner):
                     severity=sev_map.get(item.get("level", "warning"), Severity.MEDIUM),
                     file_path=item.get("file", dockerfile),
                     line=item.get("line", 0),
-                    description=item.get("column", ""),
+                    description=item.get("message", ""),
                     remediation=f"https://github.com/hadolint/hadolint/wiki/{item.get('code', '')}",
                     scanner="hadolint",
                 ))
@@ -76,7 +76,7 @@ class DockerScanner(BaseScanner):
             return []
         log.info("[Docker] trivy fs")
         result = run_command(
-            ["trivy", "fs", "--format", "json", "--security-checks", "vuln,config", path],
+            ["trivy", "fs", "--format", "json", "--scanners", "vuln,config", path],
             cwd=path, timeout=180,
         )
         if not result.stdout:
