@@ -55,20 +55,27 @@ class PythonScanner(BaseScanner):
         return []
 
     def _parse_pip_audit(self, output: str) -> list[Finding]:
-        """Parse la sortie JSON de pip-audit."""
+        """Parse la sortie JSON de pip-audit.
+
+        pip-audit >= 2.x expose un champ ``severity`` (liste de dicts CVSS) par
+        vulnérabilité. On l'utilise en priorité ; en l'absence, on extrait le score
+        numérique CVSS pour estimer la sévérité plutôt que de tout mettre en HIGH.
+        """
         findings = []
         try:
             data = json.loads(output)
             dependencies = data if isinstance(data, list) else data.get("dependencies", [])
             for dep in dependencies:
                 for vuln in dep.get("vulns", []):
-                    severity = self._map_pip_audit_severity(vuln.get("fix_versions", []))
+                    severity = self._map_pip_audit_severity(vuln)
                     findings.append(Finding(
                         rule_id=vuln.get("id", "UNKNOWN"),
                         title=f"Vulnérabilité dans {dep.get('name', '?')} {dep.get('version', '?')}",
                         severity=severity,
                         description=vuln.get("description", "")[:500],
-                        remediation=f"Mettre à jour vers : {', '.join(vuln.get('fix_versions', []))}",
+                        remediation=f"Mettre à jour vers : {', '.join(vuln.get('fix_versions', []))}"
+                        if vuln.get("fix_versions")
+                        else "Aucune version corrective connue",
                         scanner="pip-audit",
                     ))
         except (json.JSONDecodeError, KeyError) as e:
@@ -76,9 +83,39 @@ class PythonScanner(BaseScanner):
         return findings
 
     @staticmethod
-    def _map_pip_audit_severity(fix_versions: list[str]) -> Severity:
-        """pip-audit ne fournit pas de sévérité directe, on met HIGH par défaut."""
-        return Severity.HIGH
+    def _map_pip_audit_severity(vuln: dict) -> Severity:
+        """Mappe la sévérité pip-audit vers Severity.
+
+        Priorité :
+        1. Champ ``severity`` direct (pip-audit >= 2.x, format OSV)
+        2. Score CVSS numérique dans ``aliases`` / ``severity`` CVSS string
+        3. Fallback MEDIUM (jamais HIGH par défaut — évite les faux positifs)
+        """
+        # Format pip-audit >= 2.x : [{"type": "cvssv3", "score": "CRITICAL"}, ...]
+        for sev_entry in vuln.get("severity", []):
+            label = str(sev_entry.get("score", "")).upper()
+            mapping = {
+                "CRITICAL": Severity.CRITICAL,
+                "HIGH": Severity.HIGH,
+                "MEDIUM": Severity.MEDIUM,
+                "LOW": Severity.LOW,
+            }
+            if label in mapping:
+                return mapping[label]
+            # Certaines versions exposent un score numérique CVSS dans "score"
+            try:
+                score = float(label)
+                if score >= 9.0:
+                    return Severity.CRITICAL
+                if score >= 7.0:
+                    return Severity.HIGH
+                if score >= 4.0:
+                    return Severity.MEDIUM
+                return Severity.LOW
+            except ValueError:
+                pass
+        # Fallback conservateur : MEDIUM plutôt que HIGH aveugle
+        return Severity.MEDIUM
 
     # Bandit
 
