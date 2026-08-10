@@ -5,7 +5,7 @@ from enum import Enum
 
 
 class Severity(str, Enum):
-    """Niveaux de sévérité des findings."""
+    """models.py::Niveaux de sévérité des findings------------------------------------#"""
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"

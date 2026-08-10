@@ -1,8 +1,8 @@
-"""SecurePipeline - Détecteur de stacks technologiques."""
+"""SecurePipeline - Détecteur de stacks """
 
 from pathlib import Path
 
-# Signatures de détection
+# detector.py::Signatures de détection----------------------------------------------#
 
 STACK_SIGNATURES: dict[str, list[str]] = {
     "python":  ["requirements.txt", "setup.py", "pyproject.toml", "Pipfile", "poetry.lock"],
