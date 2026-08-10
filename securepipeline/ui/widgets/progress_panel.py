@@ -39,10 +39,12 @@ class ScanProgress:
         self._frame = 0
         self._start_time = 0.0
         self._lines_drawn = 0
+        self._suppress_initial = True
 
     def start_scanner(self, name: str) -> None:
         """Marque un scanner comme demarre."""
         self.statuses[name] = "RUNNING"
+        self._suppress_initial = False  # Dès qu'un scanner démarre on peut afficher
 
     def finish_scanner(self, name: str, status: str) -> None:
         """Marque un scanner comme termine."""
@@ -58,15 +60,17 @@ class ScanProgress:
 
     def __exit__(self, *args):
         self._running = False
+        self._suppress_initial = False  # Toujours afficher le bilan final
         if self._thread:
             self._thread.join(timeout=1)
-        self._draw()
-        print() # Nouvelle ligne a la fin
+        self._draw()  # Dernier dessin garanti (100 %)
+        print()       # Nouvelle ligne à la fin
 
     def _animate(self) -> None:
         """Thread d'animation."""
         while self._running:
-            self._draw()
+            if not self._suppress_initial:
+                self._draw()
             self._frame += 1
             time.sleep(0.12)
 
