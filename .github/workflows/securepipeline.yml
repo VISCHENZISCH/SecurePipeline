@@ -9,6 +9,10 @@ on:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # nécessaire pour commenter la PR
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,24 +21,48 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          
-      - name: Install System Dependencies
+
+      - name: Install System Security Tools
         run: |
-          sudo apt-get update
-          # Installer les outils de base (exemple: trivy)
-          sudo apt-get install -y wget apt-transport-https gnupg
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
+          sudo apt-get update -qq
+
+          # ── Trivy (scan CVE + IaC) ──────────────────────────────────────────
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | gpg --dearmor \
+            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
+            https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -qq
           sudo apt-get install -y trivy
-          # Installation d'autres outils (hadolint, etc.) selon les besoins du projet
-          wget -O /tmp/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
-          sudo mv /tmp/hadolint /usr/local/bin/hadolint
-          sudo chmod +x /usr/local/bin/hadolint
-          
-          # Installer Semgrep
+
+          # ── Hadolint (lint Dockerfile) ──────────────────────────────────────
+          wget -qO /tmp/hadolint \
+            https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+          sudo install -m 755 /tmp/hadolint /usr/local/bin/hadolint
+
+          # ── Gitleaks (secrets) ──────────────────────────────────────────────
+          wget -qO- \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz \
+            | tar -xz -C /tmp gitleaks
+          sudo install -m 755 /tmp/gitleaks /usr/local/bin/gitleaks
+
+          # ── kube-score (K8s security lint) ─────────────────────────────────
+          wget -qO /tmp/kube-score \
+            https://github.com/zegl/kube-score/releases/download/v1.18.0/kube-score_1.18.0_linux_amd64
+          sudo install -m 755 /tmp/kube-score /usr/local/bin/kube-score
+
+          # ── kubesec (K8s security scoring) ─────────────────────────────────
+          wget -qO /tmp/kubesec \
+            https://github.com/controlplaneio/kubesec/releases/download/v2.13.0/kubesec_linux_amd64.tar.gz
+          tar -xz -C /tmp -f /tmp/kubesec kubesec
+          sudo install -m 755 /tmp/kubesec /usr/local/bin/kubesec
+
+      - name: Install Python Security Tools
+        run: |
           python -m pip install --upgrade pip
-          pip install semgrep
+          pip install semgrep bandit pip-audit checkov
 
       - name: Install SecurePipeline
         run: |
@@ -42,8 +70,9 @@ jobs:
 
       - name: Run SecurePipeline Scan
         id: scan
+        # IMPORTANT : "scan" est un sous-commande positionnelle, PAS un flag --scan
         run: |
-          securepipeline --scan . --fail-on critical
+          securepipeline scan . --fail-on critical
 
       - name: Upload Report
         if: always()
@@ -51,24 +80,28 @@ jobs:
         with:
           name: securepipeline-report
           path: .securepipeline/reports/securepipeline-report.md
-          
-      - name: Comment PR
+          if-no-files-found: warn
+
+      - name: Comment PR with scan results
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const path = './.securepipeline/reports/securepipeline-report.md';
-            if (fs.existsSync(path)) {
-              let report = fs.readFileSync(path, 'utf8');
-              // Tronquer si trop long pour github (limite ~65k chars)
-              if (report.length > 60000) {
-                 report = report.substring(0, 60000) + "\n\n... (Rapport tronqué, voir l'artefact pour les détails complets)";
-              }
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: report
-              });
+            const reportPath = './.securepipeline/reports/securepipeline-report.md';
+            if (!fs.existsSync(reportPath)) {
+              console.log('Rapport introuvable, commentaire ignoré.');
+              return;
             }
+            let report = fs.readFileSync(reportPath, 'utf8');
+            // Tronquer si trop long pour GitHub (limite ~65k chars)
+            if (report.length > 60000) {
+              report = report.substring(0, 60000) +
+                '\n\n> Rapport tronqué. Téléchargez l\'artefact complet dans les Actions.';
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## SecurePipeline — Rapport de sécurité\n\n${report}`,
+            });
