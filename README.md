@@ -7,7 +7,7 @@
 - **Détection Automatique** : Identifie la stack (Python, Node.js, PHP, Flutter, Docker, Kubernetes) sans configuration.
 - **Analyse Statique (SAST)** : Utilise Semgrep et Bandit pour détecter les patterns de code dangereux.
 - **Audit de Dépendances** : Scanne les vulnérabilités (CVE) via npm audit, composer audit, pip-audit et dart pub.
-- **Audit d'Infrastructure (IaC)** : Linting de Dockerfile (Hadolint), scan d'images (Trivy), analyse de manifests K8s (kube-score, Checkov).
+- **Audit d'Infrastructure (IaC)** : Linting de Dockerfile (Hadolint), scan d'images (Trivy), analyse de manifests K8s (kube-score, Checkov, kubesec).
 - **Détection de Secrets** : Recherche de clés API, tokens et mots de passe avec Gitleaks.
 - **Intégration CI/CD** : Mode headless parfait pour GitHub Actions avec génération de rapports Markdown.
 - **Interface CLI interactive** : Menu terminal léger sans dépendance d'affichage externe.
@@ -18,8 +18,8 @@
 
 ```bash
 # 1. Cloner le projet
-git clone https://github.com/votre-org/securepipeline.git
-cd securepipeline
+git clone https://github.com/VISCHENZISCH/SecurePipeline.git
+cd SecurePipeline
 
 # 2. Créer un environnement virtuel
 python3 -m venv .venv
@@ -37,7 +37,7 @@ L'image Docker contient toutes les dépendances requises :
 
 ```bash
 docker build -t securepipeline:latest .
-docker run --rm -v $(pwd):/app securepipeline scan /app
+docker run --rm -v $(pwd):/project:ro securepipeline:latest scan /project
 ```
 
 ## Utilisation
@@ -55,10 +55,12 @@ securepipeline scan /chemin/vers/projet
 Idéal pour les pipelines automatisés. Échoue avec un code `1` si des vulnérabilités critiques sont trouvées :
 
 ```bash
-securepipeline scan . --interactive=false --fail-on critical
+securepipeline scan . --fail-on critical
 ```
 
 *Le rapport sera généré dans `.securepipeline/reports/securepipeline-report.md`.*
+
+Consultez [docs/USAGE.md](docs/USAGE.md) pour l'utilisation complète.
 
 ## Architecture des Modules
 
@@ -70,4 +72,4 @@ securepipeline scan . --interactive=false --fail-on critical
 | **PHP** | composer audit, Semgrep |
 | **Flutter**| dart pub outdated, Semgrep |
 | **Docker** | Hadolint (Dockerfile), Trivy (Image) |
-| **Kubernetes**| kube-score, Checkov |
+| **Kubernetes**| kube-score, Checkov, kubesec |
