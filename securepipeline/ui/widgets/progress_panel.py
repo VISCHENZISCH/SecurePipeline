@@ -34,6 +34,7 @@ class ScanProgress:
         self.total = len(scanner_names)
         self.completed = 0
         self.statuses = {name: "PENDING" for name in scanner_names}
+        self.scanner_start_frames = {}
         self._running = False
         self._thread: threading.Thread | None = None
         self._frame = 0
@@ -44,6 +45,7 @@ class ScanProgress:
     def start_scanner(self, name: str) -> None:
         """Marque un scanner comme demarre."""
         self.statuses[name] = "RUNNING"
+        self.scanner_start_frames[name] = self._frame
         self._suppress_initial = False  # Dès qu'un scanner démarre on peut afficher
 
     def finish_scanner(self, name: str, status: str) -> None:
@@ -80,14 +82,32 @@ class ScanProgress:
         lines.append(f"  {CYAN}Scanning repository{RESET}")
         lines.append("")
 
-        # Barre de progression globale
+        # Calcul d'une progression fluide
         bar_width = 25
+        progress_val = 0.0
+        
+        for name in self.scanner_names:
+            status = self.statuses.get(name, "PENDING")
+            if status in ("OK", "ERR") or status.startswith("SKIP"):
+                progress_val += 1.0
+            elif status == "RUNNING":
+                # Progression simulée basée sur le temps (asymptote vers 0.9)
+                start_frame = self.scanner_start_frames.get(name, self._frame)
+                frames_running = max(0, self._frame - start_frame)
+                fake_prog = 0.9 * (1.0 - (1.0 / (1.0 + frames_running * 0.02)))
+                progress_val += fake_prog
+
         if self.total > 0:
-            filled = int((self.completed / self.total) * bar_width)
+            filled = int((progress_val / self.total) * bar_width)
+            pct = int((progress_val / self.total) * 100)
         else:
             filled = 0
+            pct = 0
+            
+        filled = min(max(filled, 0), bar_width)
+        pct = min(max(pct, 0), 100)
         empty = bar_width - filled
-        pct = int((self.completed / max(self.total, 1)) * 100)
+        
         bar = f"{DIM_GREEN}{BLOCK_FULL * filled}{DARK_GRAY}{BLOCK_LIGHT * empty}{RESET}"
         
         lines.append(f"  {bar} {WHITE}{pct}%{RESET}")
@@ -123,7 +143,12 @@ class ScanProgress:
 
         # Effacement et redessin
         out = ""
-        if self._lines_drawn > 0:
+        
+        if self._lines_drawn == 0:
+            # Pré-allouer les lignes pour éviter le scrolling qui casse le \033[A
+            out += "\n" * len(lines)
+            out += f"\033[{len(lines)}A"
+        elif self._lines_drawn > 0:
             out += f"\033[{self._lines_drawn}A" # Remonte le curseur
         
         for line in lines:

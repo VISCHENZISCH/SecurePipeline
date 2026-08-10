@@ -93,15 +93,10 @@ body {
     letter-spacing: 1px;
     color: var(--text-secondary);
 }
-.card-critical { border-left: 3px solid var(--sev-critical); }
 .card-critical .count { color: var(--sev-critical); }
-.card-high { border-left: 3px solid var(--sev-high); }
 .card-high .count { color: var(--sev-high); }
-.card-medium { border-left: 3px solid var(--sev-medium); }
 .card-medium .count { color: var(--sev-medium); }
-.card-low { border-left: 3px solid var(--sev-low); }
 .card-low .count { color: var(--sev-low); }
-.card-info { border-left: 3px solid var(--sev-info); }
 .card-info .count { color: var(--sev-info); }
 
 /* Severity Bars */
@@ -121,13 +116,11 @@ body {
     flex: 1;
     height: 8px;
     background: var(--bg-hover);
-    border-radius: 4px;
     overflow: hidden;
     margin: 0 0.8rem;
 }
 .sev-bar-fill {
     height: 100%;
-    border-radius: 4px;
     transition: width 0.8s ease-out;
 }
 .sev-bar-count {

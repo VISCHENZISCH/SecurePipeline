@@ -336,7 +336,7 @@ def update_project() -> None:
     import subprocess
     try:
         print_status("Récupération de la dernière version ...", "info")
-        res = subprocess.run("git pull", shell=True, capture_output=True, text=True)
+        res = subprocess.run(["git", "pull"], capture_output=True, text=True)
         if res.returncode == 0:
             print_status("Mise à jour terminée avec succès.", "success")
             if res.stdout:
@@ -413,12 +413,14 @@ def interactive_loop():
         else:
             if choice:
                 # Execute la commande comme un terminal
+                import shlex
                 import subprocess
 
                 from securepipeline.ui.display import DEB_RED, RESET
                 print()
                 try:
-                    res = subprocess.run(choice, shell=True, capture_output=True, text=True, errors="replace")
+                    args = shlex.split(choice)
+                    res = subprocess.run(args, capture_output=True, text=True, errors="replace")
                     if res.stdout:
                         for line in res.stdout.rstrip().split("\n"):
                             print(f"  {line.lstrip()}")
