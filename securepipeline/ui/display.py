@@ -320,9 +320,14 @@ def print_menu() -> None:
     
     try:
         hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
     except Exception:
         hostname = "unknown"
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+    except Exception:
         local_ip = "127.0.0.1"
 
     print(f"  {ORANGE}>{RESET} {WHITE}User     {RESET} {CYAN}{user_name}{RESET}")
