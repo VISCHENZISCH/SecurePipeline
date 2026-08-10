@@ -1,0 +1,94 @@
+rules:
+
+  # ── eval() — Injection de code ─────────────────────────────────────────────
+  - id: js-eval-injection
+    message: >
+      eval() avec une entrée dynamique peut permettre l'exécution de code arbitraire.
+      Remplacez par JSON.parse() pour les données JSON ou restreignez les entrées.
+    severity: ERROR
+    languages: [javascript, typescript]
+    patterns:
+      - pattern: eval($X)
+      - pattern-not: eval("...")   # littéraux statiques — moins risqués
+    metadata:
+      category: security
+      cwe: CWE-95
+      owasp: A03:2021
+
+  # ── dangerouslySetInnerHTML (React XSS) ───────────────────────────────────
+  - id: js-react-xss-dangerouslysetinnerhtml
+    message: >
+      dangerouslySetInnerHTML avec une variable non nettoyée est une source de XSS.
+      Sanitisez le contenu avec DOMPurify avant injection.
+    severity: ERROR
+    languages: [javascript, typescript]
+    pattern: <$EL dangerouslySetInnerHTML={{__html: $VAR}} .../>
+    pattern-not: <$EL dangerouslySetInnerHTML={{__html: DOMPurify.sanitize($VAR)}} .../>
+    metadata:
+      category: security
+      cwe: CWE-79
+      owasp: A03:2021
+
+  # ── Prototype Pollution ────────────────────────────────────────────────────
+  - id: js-prototype-pollution
+    message: >
+      Écriture directe sur Object.prototype ou __proto__ peut provoquer une
+      pollution du prototype. Vérifiez les clés utilisateur avant de les assigner.
+    severity: WARNING
+    languages: [javascript, typescript]
+    pattern-either:
+      - pattern: Object.prototype[$KEY] = $VAL
+      - pattern: $OBJ.__proto__[$KEY] = $VAL
+      - pattern: $OBJ["__proto__"][$KEY] = $VAL
+    metadata:
+      category: security
+      cwe: CWE-1321
+
+  # ── Math.random() pour usage cryptographique ───────────────────────────────
+  - id: js-insecure-random
+    message: >
+      Math.random() n'est pas cryptographiquement sûr.
+      Utilisez crypto.getRandomValues() ou crypto.randomUUID() à la place.
+    severity: WARNING
+    languages: [javascript, typescript]
+    patterns:
+      - pattern: Math.random()
+    metadata:
+      category: security
+      cwe: CWE-338
+
+  # ── Secrets codés en dur ──────────────────────────────────────────────────
+  - id: js-hardcoded-secret
+    message: >
+      Secret ou token codé en dur détecté. Utilisez des variables d'environnement
+      (process.env.SECRET) ou un gestionnaire de secrets.
+    severity: WARNING
+    languages: [javascript, typescript]
+    pattern-either:
+      - pattern: const $SECRET = "..."
+      - pattern: let $SECRET = "..."
+      - pattern: var $SECRET = "..."
+    pattern-regex: '(?i)(secret|token|password|api[_-]?key|apikey)\s*='
+    pattern-not-regex: 'process\.env\.|import\.meta\.env\.'
+    metadata:
+      category: security
+      cwe: CWE-798
+      owasp: A02:2021
+
+  # ── setTimeout/setInterval avec string (injection) ────────────────────────
+  - id: js-settimeout-string-injection
+    message: >
+      Passer une chaîne de caractères à setTimeout/setInterval est équivalent à eval().
+      Passez une fonction anonyme à la place.
+    severity: WARNING
+    languages: [javascript, typescript]
+    pattern-either:
+      - pattern: setTimeout($STR, ...)
+      - pattern: setInterval($STR, ...)
+    pattern-not-either:
+      - pattern: setTimeout(function() {...}, ...)
+      - pattern: setTimeout(() => {...}, ...)
+      - pattern: setTimeout($FUNC, ...)
+    metadata:
+      category: security
+      cwe: CWE-95
