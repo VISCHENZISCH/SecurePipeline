@@ -37,7 +37,7 @@ L'image Docker contient toutes les dépendances requises :
 
 ```bash
 docker build -t securepipeline:latest .
-docker run --rm -v $(pwd):/project:ro securepipeline:latest scan /project
+docker run --rm -v "${PWD}:/project:ro" securepipeline:latest scan /project
 ```
 
 ## Utilisation

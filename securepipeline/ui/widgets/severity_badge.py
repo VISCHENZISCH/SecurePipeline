@@ -62,7 +62,7 @@ def print_severity_legend() -> None:
 
     descriptions = {
         "critical": "Vulnerabilite exploitable, impact majeur",
-        "high":     "Risque eleve, correction prioritaire",
+        "high":     "Risque élevé, correction prioritaire",
         "medium":   "Risque modere, a planifier",
         "low":      "Risque faible, bonne pratique",
         "info":     "Information, pas de risque direct",

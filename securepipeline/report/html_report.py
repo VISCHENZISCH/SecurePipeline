@@ -7,7 +7,7 @@ from pathlib import Path
 from securepipeline.core.models import ScanResult, Severity
 from securepipeline import __version__
 
-# ─── Template CSS Dark Theme ─────────────────────────────────────────────────
+# html_report.py::Template CSS Dark Theme-------------------------------------------#
 
 _CSS = """
 :root {
@@ -245,12 +245,12 @@ details .detail-content {
 """
 
 
-# ─── Generateur HTML ─────────────────────────────────────────────────────────
+# html_report.py::Generateur HTML-----------------------------------------
 
 _SEV_ORDER = ["critical", "high", "medium", "low", "info"]
 _SEV_FR = {
     "critical": "Critique",
-    "high":     "Eleve",
+    "high":     "Élevé",
     "medium":   "Moyen",
     "low":      "Faible",
     "info":     "Info",
@@ -258,10 +258,10 @@ _SEV_FR = {
 
 
 def generate_html(result: ScanResult, path: str, project_name: str = "Projet") -> str:
-    """Genere un rapport HTML autonome (single-file) avec CSS integre.
+    """rapport HTML autonome (single-file) avec CSS intégré.
 
     Args:
-        result: Resultat du scan.
+        result: Résultat du scan.
         path: Chemin du projet scanne.
         project_name: Nom du projet.
 
@@ -348,7 +348,7 @@ def generate_html(result: ScanResult, path: str, project_name: str = "Projet") -
                 if f.description:
                     detail_parts.append(f"<strong>Description:</strong> {_escape(f.description)}")
                 if f.remediation:
-                    detail_parts.append(f"<strong>Remediation:</strong> {_escape(f.remediation)}")
+                    detail_parts.append(f"<strong>Rémediation:</strong> {_escape(f.remediation)}")
                 detail_html = "<br>".join(detail_parts) if detail_parts else ""
 
                 rows += f"""
