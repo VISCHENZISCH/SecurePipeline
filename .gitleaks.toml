@@ -7,7 +7,7 @@ title = "SecurePipeline Gitleaks Config"
 [extend]
 useDefault = true
 
-# ── Règles supplémentaires personnalisées ────────────────────────────────────
+#  Règles supplémentaires personnalisées ────────────────────────────────────
 
 [[rules]]
 id          = "generic-api-key-custom"

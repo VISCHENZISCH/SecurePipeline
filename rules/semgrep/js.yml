@@ -1,6 +1,6 @@
 rules:
 
-  # ── eval() — Injection de code ─────────────────────────────────────────────
+  # eval() - Injection de code
   - id: js-eval-injection
     message: >
       eval() avec une entrée dynamique peut permettre l'exécution de code arbitraire.
@@ -15,7 +15,7 @@ rules:
       cwe: CWE-95
       owasp: A03:2021
 
-  # ── dangerouslySetInnerHTML (React XSS) ───────────────────────────────────
+  #  dangerouslySetInnerHTML (React XSS) 
   - id: js-react-xss-dangerouslysetinnerhtml
     message: >
       dangerouslySetInnerHTML avec une variable non nettoyée est une source de XSS.
@@ -29,7 +29,7 @@ rules:
       cwe: CWE-79
       owasp: A03:2021
 
-  # ── Prototype Pollution ────────────────────────────────────────────────────
+  #  Prototype Pollution 
   - id: js-prototype-pollution
     message: >
       Écriture directe sur Object.prototype ou __proto__ peut provoquer une
@@ -44,7 +44,7 @@ rules:
       category: security
       cwe: CWE-1321
 
-  # ── Math.random() pour usage cryptographique ───────────────────────────────
+  #Math.random() pour usage cryptographique 
   - id: js-insecure-random
     message: >
       Math.random() n'est pas cryptographiquement sûr.
@@ -57,7 +57,7 @@ rules:
       category: security
       cwe: CWE-338
 
-  # ── Secrets codés en dur ──────────────────────────────────────────────────
+  # Secrets codés en dur 
   - id: js-hardcoded-secret
     message: >
       Secret ou token codé en dur détecté. Utilisez des variables d'environnement
@@ -75,7 +75,7 @@ rules:
       cwe: CWE-798
       owasp: A02:2021
 
-  # ── setTimeout/setInterval avec string (injection) ────────────────────────
+  # setTimeout/setInterval avec string (injection) 
   - id: js-settimeout-string-injection
     message: >
       Passer une chaîne de caractères à setTimeout/setInterval est équivalent à eval().
