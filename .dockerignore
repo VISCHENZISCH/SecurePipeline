@@ -1,0 +1,5 @@
+.venv
+.git
+.securepipeline
+tests
+__pycache__

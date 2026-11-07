@@ -1,1 +1,0 @@
-"""SecurePipeline - Génération de rapports."""

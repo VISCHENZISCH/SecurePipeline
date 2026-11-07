@@ -1,4 +1,4 @@
-name: SecurePipeline Scan
+name: SecurePipeline
 
 on:
   push:
@@ -6,102 +6,87 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Actions are pinned by SHA: a tag can be moved, a commit cannot.
 jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SecurePipeline
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Tests
+        run: pytest -q
+
   security-scan:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write   # nécessaire pour commenter la PR
+      pull-requests: write   # required to comment on the PR
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0     # Gitleaks scans the full history
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
 
-      - name: Install System Security Tools
+      - name: Install SecurePipeline and security tools
         run: |
-          sudo apt-get update -qq
-
-          # ── Trivy (scan CVE + IaC) ──────────────────────────────────────────
-          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
-            | gpg --dearmor \
-            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
-            https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
-            | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update -qq
-          sudo apt-get install -y trivy
-
-          # ── Hadolint (lint Dockerfile) ──────────────────────────────────────
-          wget -qO /tmp/hadolint \
-            https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
-          sudo install -m 755 /tmp/hadolint /usr/local/bin/hadolint
-
-          # ── Gitleaks (secrets) ──────────────────────────────────────────────
-          wget -qO- \
-            https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz \
-            | tar -xz -C /tmp gitleaks
-          sudo install -m 755 /tmp/gitleaks /usr/local/bin/gitleaks
-
-          # ── kube-score (K8s security lint) ─────────────────────────────────
-          wget -qO /tmp/kube-score \
-            https://github.com/zegl/kube-score/releases/download/v1.18.0/kube-score_1.18.0_linux_amd64
-          sudo install -m 755 /tmp/kube-score /usr/local/bin/kube-score
-
-          # ── kubesec (K8s security scoring) ─────────────────────────────────
-          wget -qO /tmp/kubesec \
-            https://github.com/controlplaneio/kubesec/releases/download/v2.13.0/kubesec_linux_amd64.tar.gz
-          tar -xz -C /tmp -f /tmp/kubesec kubesec
-          sudo install -m 755 /tmp/kubesec /usr/local/bin/kubesec
-
-      - name: Install Python Security Tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install semgrep bandit pip-audit checkov
-
-      - name: Install SecurePipeline
-        run: |
-          pip install -e .
+          pip install -e ".[tools]"
+          securepipeline tools install --yes --bin-dir "$HOME/.local/bin"
 
       - name: Run SecurePipeline Scan
-        id: scan
-        # IMPORTANT : "scan" est un sous-commande positionnelle, PAS un flag --scan
-        run: |
-          securepipeline scan . --fail-on critical
+        run: securepipeline scan . --fail-on critical --format both
 
-      - name: Upload Report
+      - name: Upload Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: securepipeline-report
-          path: .securepipeline/reports/securepipeline-report.md
+          path: .securepipeline/reports/
           if-no-files-found: warn
 
+      # Pull requests from forks are not allowed to comment.
       - name: Comment PR with scan results
-        if: github.event_name == 'pull_request' && always()
-        uses: actions/github-script@v7
+        if: >-
+          always() && github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const fs = require('fs');
             const reportPath = './.securepipeline/reports/securepipeline-report.md';
             if (!fs.existsSync(reportPath)) {
-              console.log('Rapport introuvable, commentaire ignoré.');
+              console.log('Report not found, skipping the comment.');
               return;
             }
             let report = fs.readFileSync(reportPath, 'utf8');
-            // Tronquer si trop long pour GitHub (limite ~65k chars)
+            // GitHub limits comments to about 65k characters.
             if (report.length > 60000) {
               report = report.substring(0, 60000) +
-                '\n\n> Rapport tronqué. Téléchargez l\'artefact complet dans les Actions.';
+                '\n\n> Report truncated. Download the full artifact from the Actions run.';
             }
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## SecurePipeline — Rapport de sécurité\n\n${report}`,
+              body: report,
             });

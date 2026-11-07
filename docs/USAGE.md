@@ -1,141 +1,157 @@
-# docs/USAGE.md — Guide d'utilisation SecurePipeline
+# Using SecurePipeline
 
-# Utilisation de SecurePipeline
+SecurePipeline is a multi-stack security CLI. This guide covers the interactive menu, the commands, Docker and CI/CD.
 
-SecurePipeline est un scanner de sécurité CLI multi-stack. Ce guide couvre toutes
-les modalités d'utilisation : interactif, headless, Docker et CI/CD.
-
----
-
-## Prérequis
-
-Assurez-vous d'avoir suivi le guide [INSTALL.md](./INSTALL.md) et que l'environnement
-virtuel est activé (`source .venv/bin/activate`).
+Prerequisite: follow [INSTALL.md](./INSTALL.md).
 
 ---
 
-## Mode Interactif (usage local)
-
-Lance le menu terminal guidé :
+## Interactive menu
 
 ```bash
-securepipeline scan /chemin/vers/votre/projet
+securepipeline
 ```
 
-L'outil :
-1. Détecte automatiquement les stacks présentes (Python, Node, PHP, Flutter, Docker, K8s)
-2. Lance les scanners correspondants
-3. Affiche le résumé dans le terminal
-4. Génère un rapport dans `.securepipeline/reports/`
+The top of the menu shows the current project, its stacks, the missing tools and the last scan summary. The project starts as the current directory. **Scan another project** asks for a path, scans it right away and makes it the current project.
+
+| Key | Action |
+|---|---|
+| `1` | Scan this project |
+| `2` | Scan another project |
+| `3` | View last results |
+| `4` | Export HTML report (from the last results, without a new scan) |
+| `5` | Check / install tools |
+| `6` | List scan modules |
+| `7` | Scan settings (threshold, report format, parallelism) |
+| `8` | Help and CI/CD |
+| `u` | Update SecurePipeline |
+| `q` | Quit |
+
+Type a command right after a `!` to run it, for example `!ls` or `!git status`. It runs without a shell, so pipes, redirections and built-ins such as `cd` are not available.
+
+The menu uses the terminal's alternate screen, like `vim` or `htop`: quitting restores your terminal as it was, without menu copies in the history. Scan results print on the normal screen, so you can scroll through them, and they remain visible after you quit. The ASCII logo needs at least 78 columns, and terminals shorter than 24 lines stay on the normal screen so that you can scroll up to the top of the menu.
 
 ---
 
-## Mode Headless (CI/CD)
+## Commands
 
-Idéal pour les pipelines automatisés. Aucune interaction requise.
+| Command | Purpose |
+|---|---|
+| `securepipeline scan [PATH]` | Scan a project (current directory by default) |
+| `securepipeline detect [PATH]` | Show the stacks and planned tools |
+| `securepipeline tools check` | Show tool status |
+| `securepipeline tools install [TOOLS]` | Install the missing tools, or the named ones |
+| `securepipeline modules` | List the scan modules |
 
-```bash
-# Échoue avec code 1 si des vulnérabilités critiques sont trouvées
-securepipeline scan . --fail-on critical
+### `scan` options
 
-# Modifier le seuil d'échec
-securepipeline scan . --fail-on high
-
-# Choisir le format de rapport
-securepipeline scan . --format markdown
-securepipeline scan . --format html
-securepipeline scan . --format both
-```
-
-Le rapport est écrit dans `.securepipeline/reports/securepipeline-report.md` (et/ou `.html`).
+| Option | Default | Purpose |
+|---|---|---|
+| `--fail-on critical\|high\|medium\|low` | `critical` | Severity from which the scan fails |
+| `--format md\|markdown\|html\|both` | `md` | Report format |
+| `--report-dir DIR` | `.securepipeline/reports` | Report directory, relative to the project |
+| `-j`, `--jobs N` | based on CPU, 8 at most | Tools to run in parallel |
+| `--allow-incomplete` | off | Do not fail when a tool is missing or fails |
+| `--all` | off | Print all findings, not just the first 20 |
+| `-q`, `--quiet` | off | Print the verdict only |
 
 ---
 
-## Via Docker (sans installation Python locale)
+## Exit codes
+
+| Code | Meaning |
+|------|---------------|
+| `0`  | No finding at the threshold and a complete scan |
+| `1`  | At least one finding at the `--fail-on` threshold |
+| `2`  | Incomplete scan, invalid argument or report that cannot be written |
+| `130` | Scan interrupted (Ctrl-C) |
+
+Code `1` takes precedence over code `2`: a blocking finding is reported even if another tool failed.
+
+---
+
+## Tool status
+
+| Status | Meaning | Makes the scan incomplete |
+|---|---|---|
+| No findings, or N findings | The tool worked | No |
+| Nothing to scan | No target for this tool (no Dockerfile...) | No |
+| Skipped | Tool missing, or target that cannot be audited (no lockfile...) | Yes |
+| Error | Failure, timeout or unreadable output | Yes |
+
+---
+
+## Reports
+
+The `.securepipeline/reports/` directory contains:
+
+- `securepipeline-report.md` and/or `securepipeline-report.html`, depending on `--format`;
+- `securepipeline-report.json`, always written, which the menu reads back to show the last results and generate the HTML without a new scan.
+
+Each report includes the summary, the scan coverage (the result of each tool) and the details of the findings. Secrets are redacted: only their location and type are kept.
+
+---
+
+## Docker
 
 ```bash
-# Scanner le répertoire courant
-docker run --rm \
-  -v "$(pwd):/project:ro" \
-  -v "$(pwd)/.securepipeline:/project/.securepipeline" \
-  securepipeline:latest scan /project
+docker build -t securepipeline:latest .
 
-# Avec seuil d'échec
-docker run --rm \
+docker run --rm --user "$(id -u):$(id -g)" \
   -v "$(pwd):/project:ro" \
-  -v "$(pwd)/.securepipeline:/project/.securepipeline" \
+  -v "$(pwd)/.securepipeline/reports:/project/.securepipeline/reports" \
   securepipeline:latest scan /project --fail-on critical
 ```
 
-### Via docker-compose
+With docker-compose (read-only container, Trivy cache kept between scans):
 
 ```bash
-# Build + scan du répertoire courant
 docker compose run --rm scanner
-
-# Avec arguments personnalisés
 docker compose run --rm scanner scan /project --fail-on high
 ```
 
----
+With rootless Docker, container UID 0 is your user: use `--user 0:0` or `env UID=0 GID=0 docker compose run --rm scanner`.
 
-## Exemples de rapports
-
-### Résumé terminal (mode interactif)
-
-```
-╔══════════════════════════════════════════════╗
-║         SecurePipeline — Résultats           ║
-╠══════════════════════════════════════════════╣
-║  Stacks détectées : python, docker           ║
-║  Findings total   : 12                       ║
-║  ├─ CRITICAL : 1                             ║
-║  ├─ HIGH     : 3                             ║
-║  ├─ MEDIUM   : 6                             ║
-║  └─ LOW/INFO : 2                             ║
-╚══════════════════════════════════════════════╝
-```
-
-### Rapport Markdown
-
-Le rapport Markdown `.securepipeline/reports/securepipeline-report.md` contient :
-- Résumé exécutif (stacks, durée, compteurs par sévérité)
-- Section par scanner (pip-audit, Bandit, Semgrep, Trivy, Hadolint, Gitleaks, kube-score, Checkov, kubesec)
-- Détail de chaque finding : règle, fichier, ligne, description, remédiation
+The image does not include `dart`: a Flutter project gives an incomplete scan there, unless you use `--allow-incomplete`.
 
 ---
 
-## Codes de sortie
+## CI/CD
 
-| Code | Signification |
-|------|---------------|
-| `0`  | Scan terminé sans finding au-dessus du seuil |
-| `1`  | Au moins un finding au-dessus du seuil `--fail-on` |
-| `2`  | Erreur critique (projet inaccessible, crash inattendu) |
-
----
-
-## Variables d'environnement
-
-| Variable | Défaut | Description |
-|---|---|---|
-| `SECUREPIPELINE_LOG_LEVEL` | `INFO` | Verbosité du log (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
-| `SECUREPIPELINE_FAIL_ON` | `critical` | Seuil de sévérité pour l'exit code 1 |
-| `SECUREPIPELINE_REPORT_DIR` | `.securepipeline/reports` | Répertoire de sortie des rapports |
-
----
-
-## Dépannage
-
-**"Outil X non installé, module ignoré"**
-→ L'outil est absent du PATH. Relancez `./install.sh` ou installez-le manuellement.
-
-**Aucun finding alors que des vulnérabilités sont connues**
-→ Vérifiez que l'outil externe retourne bien du JSON valide :
 ```bash
-semgrep scan --json /votre/projet
-pip-audit --format json --output -
+securepipeline scan . --fail-on critical --format both
 ```
 
-**Le rapport est vide**
-→ Vérifiez les droits d'écriture sur `.securepipeline/reports/`.
+GitHub Actions example: [.github/workflows/securepipeline.yml](../.github/workflows/securepipeline.yml).
+
+---
+
+## Environment variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SECUREPIPELINE_FAIL_ON` | `critical` | Same as `--fail-on` |
+| `SECUREPIPELINE_FORMAT` | `md` | Same as `--format` |
+| `SECUREPIPELINE_REPORT_DIR` | `.securepipeline/reports` | Same as `--report-dir` |
+| `SECUREPIPELINE_LOG_LEVEL` | `WARNING` | Internal log verbosity |
+| `NO_COLOR` | not set | Disable colors |
+| `FORCE_COLOR` | not set | Force colors, even outside a terminal |
+
+---
+
+## Troubleshooting
+
+**A tool shows "not installed"**
+Run `securepipeline tools install`. `npm`, `composer` and `dart` are installed separately.
+
+**`npm` or `composer` is skipped because of a missing lockfile**
+Generate and commit `package-lock.json` or `composer.lock`. yarn and pnpm are not audited.
+
+**`pip-audit` is skipped**
+The tool audits `requirements.txt` or `pyproject.toml`. A project with only `setup.py` or a `Pipfile` is not audited.
+
+**A Python dependency shows "Unknown severity"**
+OSV.dev did not respond or does not know this severity: the vulnerability defaults to MEDIUM.
+
+**`semgrep` fails**
+The registry rules require network access to semgrep.dev.

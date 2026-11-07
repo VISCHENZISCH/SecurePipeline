@@ -1,0 +1,85 @@
+rules:
+  - id: js-eval-injection
+    message: >
+      eval() with dynamic input can allow arbitrary code execution.
+      Use JSON.parse() for JSON data, or restrict the input.
+    severity: ERROR
+    languages: [javascript, typescript]
+    patterns:
+      - pattern: eval($X)
+      - pattern-not: eval("...")
+    metadata:
+      category: security
+      cwe: CWE-95
+      owasp: A03:2021
+
+  - id: js-react-xss-dangerouslysetinnerhtml
+    message: >
+      dangerouslySetInnerHTML with an unsanitized variable is a source of XSS.
+      Sanitize the content with DOMPurify first.
+    severity: ERROR
+    languages: [javascript, typescript]
+    patterns:
+      - pattern: "<$EL dangerouslySetInnerHTML={{__html: $VAR}} />"
+      - pattern-not: "<$EL dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(...)}} />"
+    metadata:
+      category: security
+      cwe: CWE-79
+      owasp: A03:2021
+
+  - id: js-prototype-pollution
+    message: >
+      Writing directly to Object.prototype or __proto__ can cause prototype
+      pollution. Validate user-provided keys before assigning them.
+    severity: WARNING
+    languages: [javascript, typescript]
+    pattern-either:
+      - pattern: Object.prototype[$KEY] = $VAL
+      - pattern: $OBJ.__proto__[$KEY] = $VAL
+      - pattern: $OBJ["__proto__"][$KEY] = $VAL
+    metadata:
+      category: security
+      cwe: CWE-1321
+
+  - id: js-insecure-random
+    message: >
+      Math.random() is not cryptographically secure.
+      Use crypto.getRandomValues() or crypto.randomUUID() instead.
+    severity: WARNING
+    languages: [javascript, typescript]
+    pattern: Math.random()
+    metadata:
+      category: security
+      cwe: CWE-338
+
+  - id: js-hardcoded-secret
+    message: >
+      Hardcoded secret or token detected. Use environment variables
+      (process.env.SECRET) or a secret manager.
+    severity: WARNING
+    languages: [javascript, typescript]
+    patterns:
+      - pattern-either:
+          - pattern: const $SECRET = "..."
+          - pattern: let $SECRET = "..."
+          - pattern: var $SECRET = "..."
+      - metavariable-regex:
+          metavariable: $SECRET
+          regex: (?i).*(secret|token|password|api_?key).*
+    metadata:
+      category: security
+      cwe: CWE-798
+      owasp: A02:2021
+
+  - id: js-settimeout-string-injection
+    message: >
+      Passing a string to setTimeout/setInterval is equivalent to eval().
+      Pass a function instead.
+    severity: WARNING
+    languages: [javascript, typescript]
+    pattern-either:
+      - pattern: setTimeout("...", ...)
+      - pattern: setInterval("...", ...)
+    metadata:
+      category: security
+      cwe: CWE-95

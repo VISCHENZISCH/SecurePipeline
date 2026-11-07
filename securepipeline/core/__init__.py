@@ -1,1 +1,1 @@
-"""SecurePipeline - Core package."""
+"""Scan engine and data models."""

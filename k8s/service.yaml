@@ -6,8 +6,7 @@ metadata:
   labels:
     app: securepipeline
 spec:
-  # ClusterIP : accessible uniquement à l'intérieur du cluster
-  # SecurePipeline est un outil CLI — pas d'exposition externe intentionnelle
+  # SecurePipeline is a CLI tool: no external exposure is intended.
   type: ClusterIP
   selector:
     app: securepipeline

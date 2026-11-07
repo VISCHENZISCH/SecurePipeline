@@ -7,14 +7,7 @@ metadata:
     app: securepipeline
     component: config
 data:
-  # Niveau de log : DEBUG | INFO | WARNING | ERROR
-  LOG_LEVEL: "INFO"
-
-  # Seuil de sévérité déclenchant un exit code 1 (critical | high | medium | low)
-  FAIL_ON: "critical"
-
-  # Chemin de sortie des rapports à l'intérieur du conteneur
-  REPORT_DIR: "/reports"
-
-  # Format du rapport généré : markdown | html | both
-  REPORT_FORMAT: "both"
+  SECUREPIPELINE_LOG_LEVEL: "WARNING"
+  SECUREPIPELINE_FAIL_ON: "critical"
+  SECUREPIPELINE_REPORT_DIR: "/reports"
+  SECUREPIPELINE_FORMAT: "both"

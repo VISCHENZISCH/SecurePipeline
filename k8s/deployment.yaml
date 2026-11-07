@@ -16,7 +16,6 @@ spec:
       labels:
         app: securepipeline
     spec:
-      # ── Sécurité au niveau du Pod ──────────────────────────────────────────
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -25,7 +24,7 @@ spec:
         seccompProfile:
           type: RuntimeDefault
 
-      # Pas de token ServiceAccount automatique (pas d'accès API K8s nécessaire)
+      # The scanner does not need the Kubernetes API.
       automountServiceAccountToken: false
 
       containers:
@@ -33,15 +32,12 @@ spec:
           image: securepipeline:latest
           imagePullPolicy: IfNotPresent
 
-          # Commande par défaut : scan en mode headless sur /project
           command: ["securepipeline", "scan", "/project", "--fail-on", "critical"]
 
-          # Variables de configuration depuis le ConfigMap
           envFrom:
             - configMapRef:
                 name: securepipeline-config
 
-          # ── Sécurité au niveau du Conteneur ──────────────────────────────
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -51,7 +47,6 @@ spec:
               drop:
                 - ALL
 
-          # ── Limites de ressources (obligatoire pour kube-score) ───────────
           resources:
             requests:
               cpu: "250m"
@@ -60,15 +55,14 @@ spec:
               cpu: "1000m"
               memory: "1Gi"
 
-          # ── Volumes ───────────────────────────────────────────────────────
           volumeMounts:
-            # Répertoire de travail temporaire (requis car rootFilesystem en lecture seule)
+            # Writable scratch space, required by the read-only root filesystem.
             - name: tmp-dir
               mountPath: /tmp
-            # Dossier de sortie des rapports
+            - name: cache-dir
+              mountPath: /cache
             - name: reports-dir
               mountPath: /reports
-            # Projet à analyser — monté via PVC ou hostPath selon l'environnement
             - name: project-dir
               mountPath: /project
               readOnly: true
@@ -76,11 +70,13 @@ spec:
       volumes:
         - name: tmp-dir
           emptyDir: {}
+        - name: cache-dir
+          emptyDir: {}
         - name: reports-dir
           emptyDir: {}
         - name: project-dir
-          # Remplacez par un PersistentVolumeClaim en production
+          # Replace with a PersistentVolumeClaim in production
           emptyDir: {}
 
-      # Évite que le conteneur redémarre indéfiniment (il s'arrête après le scan)
+      # The container exits after the scan and must not restart forever.
       restartPolicy: Never

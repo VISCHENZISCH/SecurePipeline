@@ -1,47 +1,52 @@
-Write-Host "#################### SecurePipeline #####################"
-Write-Host "                    Installation Windows                   "
-Write-Host "#################### SecurePipeline #####################"
+function Show-Banner($title, $width = 80) {
+    $left = [math]::Floor(($width - $title.Length) / 2)
+    Write-Host ("*" * $width) -ForegroundColor Green
+    Write-Host ((" " * $left) + $title) -ForegroundColor Green
+    Write-Host ("*" * $width) -ForegroundColor Green
+}
+
+
+Show-Banner "Windows installation"
+
 
 if (-not (Get-Command "python" -ErrorAction SilentlyContinue)) {
-    Write-Host "[!] python n'est pas installé. Veuillez l'installer (3.11+)." -ForegroundColor Red
+    Write-Host "[!] python is not installed. Please install it (3.11+)." -ForegroundColor Red
+    exit 1
+}
+
+python -c "import sys; sys.exit(sys.version_info < (3, 11))"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[!] Python 3.11 or newer is required." -ForegroundColor Red
     exit 1
 }
 
 if (-not (Get-Command "git" -ErrorAction SilentlyContinue)) {
-    Write-Host "[!] git n'est pas installé. Veuillez l'installer." -ForegroundColor Red
+    Write-Host "[!] git is not installed. Please install it." -ForegroundColor Red
     exit 1
 }
 
-Write-Host "[+] Création de l'environnement virtuel .venv..." -ForegroundColor Green
+Write-Host "[+] Creating the .venv virtual environment..." -ForegroundColor Green
 python -m venv .venv
-# On ajoute temporairement au PATH pour le script courant
-$env:Path = "$PWD\.venv\Scripts;$env:Path"
+$VenvPython = ".\.venv\Scripts\python.exe"
 
-Write-Host "[+] Installation du projet et des outils Python..." -ForegroundColor Green
-python -m pip install --upgrade pip
-python -m pip install -e .[dev]
-python -m pip install semgrep bandit pip-audit checkov
+Write-Host "[+] Installing the project and the Python tools..." -ForegroundColor Green
+& $VenvPython -m pip install --quiet --upgrade pip
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+& $VenvPython -m pip install --quiet -e ".[dev,tools]"
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$BinDir = "$PWD\.venv\Scripts"
+Write-Host "[+] Installing the binaries (pinned versions and SHA-256)..." -ForegroundColor Green
+# kubesec has no Windows binary: the Kubernetes module will report it.
+& ".\.venv\Scripts\securepipeline.exe" tools install --yes
+$InstallStatus = $LASTEXITCODE
 
-Write-Host "[+] Téléchargement de Gitleaks..." -ForegroundColor Green
-Invoke-WebRequest -Uri "https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_windows_x64.zip" -OutFile "$BinDir\gitleaks.zip"
-Expand-Archive -Path "$BinDir\gitleaks.zip" -DestinationPath "$BinDir" -Force
-Remove-Item "$BinDir\gitleaks.zip"
-
-Write-Host "[+] Téléchargement de Trivy..." -ForegroundColor Green
-Invoke-WebRequest -Uri "https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Windows-64bit.zip" -OutFile "$BinDir\trivy.zip"
-Expand-Archive -Path "$BinDir\trivy.zip" -DestinationPath "$BinDir" -Force
-Remove-Item "$BinDir\trivy.zip"
-
-Write-Host "[+] Téléchargement de Hadolint..." -ForegroundColor Green
-Invoke-WebRequest -Uri "https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Windows-x86_64.exe" -OutFile "$BinDir\hadolint.exe"
-
-Write-Host "[+] Téléchargement de kube-score..." -ForegroundColor Green
-Invoke-WebRequest -Uri "https://github.com/zegl/kube-score/releases/download/v1.17.0/kube-score_1.17.0_windows_amd64.exe" -OutFile "$BinDir\kube-score.exe"
-
-Write-Host "#################### SecurePipeline #####################"
-Write-Host "Installation terminée avec succès !" -ForegroundColor Green
-Write-Host "Pour lancer l'outil, activez d'abord l'environnement :"
-Write-Host "  .\.venv\Scripts\Activate.ps1"
-Write-Host "  securepipeline"
+Write-Host("")
+Write-Host ("*" * 80)
+if ($InstallStatus -eq 0) {
+    Write-Host "Installation completed successfully!" -ForegroundColor Green
+}
+else {
+    Write-Host "Installation finished, but some tools failed (see above)." -ForegroundColor Yellow
+}
+Write-Host "To start the tool:"
+Write-Host "  .\.venv\Scripts\securepipeline.exe"

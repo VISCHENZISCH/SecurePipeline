@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "securepipeline"
-version = "0.1.0"
-description = "Scanner DevSecOps multi-stack pour la sécurité des projets"
+dynamic = ["version"]
+description = "Multi-stack DevSecOps security scanner"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -17,17 +17,39 @@ dependencies = [
     "click>=8.1",
 ]
 
+[project.urls]
+Homepage = "https://github.com/VISCHENZISCH/SecurePipeline"
+Issues = "https://github.com/VISCHENZISCH/SecurePipeline/issues"
+Security = "https://github.com/VISCHENZISCH/SecurePipeline/security"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1",
 ]
+tools = [
+    "pip-audit>=2.7,<3",
+    "bandit>=1.7,<2",
+    "semgrep>=1.70,<2",
+    "checkov>=3.2,<4",
+]
 
 [project.scripts]
 securepipeline = "securepipeline.cli:main"
 
+[tool.setuptools.dynamic]
+version = {attr = "securepipeline.__version__"}
+
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["securepipeline*"]
+
+[tool.setuptools.package-data]
+"securepipeline.rules" = ["semgrep/*.yml"]
+"securepipeline.reports" = ["assets/*.css"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100

@@ -1,16 +1,33 @@
-"""SecurePipeline - Modèles de données."""
+"""Scan data models."""
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
+from typing import Any
+
+TOOL_NOT_INSTALLED = "not installed"
 
 
 class Severity(str, Enum):
-    """models.py::Niveaux de sévérité des findings------------------------------------#"""
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
     INFO = "info"
+
+    @classmethod
+    def from_label(cls, label: object, default: "Severity | None" = None) -> "Severity":
+        """Convert a tool label ("HIGH", "moderate"...) to a severity."""
+        normalized = str(label).strip().lower()
+        if normalized == "moderate":
+            return cls.MEDIUM
+        try:
+            return cls(normalized)
+        except ValueError:
+            return default if default is not None else cls.MEDIUM
+
+    @property
+    def label(self) -> str:
+        return self.value.upper()
 
 
 SEVERITY_RANK = {
@@ -22,9 +39,16 @@ SEVERITY_RANK = {
 }
 
 
+class CheckStatus(str, Enum):
+    """Outcome of a tool run. SKIPPED and ERROR make the scan incomplete."""
+    OK = "ok"
+    NOTHING = "nothing"
+    SKIPPED = "skipped"
+    ERROR = "error"
+
+
 @dataclass
 class Finding:
-    """Un résultat de scan individuel."""
     rule_id: str
     title: str
     severity: Severity
@@ -34,37 +58,81 @@ class Finding:
     remediation: str = ""
     scanner: str = ""
 
+    def __post_init__(self) -> None:
+        self.severity = Severity(self.severity)
+
+    @property
+    def location(self) -> str:
+        if self.file_path and self.line:
+            return f"{self.file_path}:{self.line}"
+        return self.file_path
+
+
+@dataclass
+class CheckResult:
+    tool: str
+    module: str
+    status: CheckStatus
+    detail: str = ""
+    findings: int = 0
+    duration: float = 0.0
+
+    def __post_init__(self) -> None:
+        self.status = CheckStatus(self.status)
+
+    @property
+    def is_incomplete(self) -> bool:
+        return self.status in (CheckStatus.SKIPPED, CheckStatus.ERROR)
+
 
 @dataclass
 class ScanResult:
-    """Résultat agrégé d'un scan complet."""
     findings: list[Finding] = field(default_factory=list)
     stacks_scanned: list[str] = field(default_factory=list)
     duration_seconds: float = 0.0
+    checks: list[CheckResult] = field(default_factory=list)
 
     @property
     def total(self) -> int:
         return len(self.findings)
 
     @property
-    def critical_count(self) -> int:
-        return sum(1 for f in self.findings if f.severity == Severity.CRITICAL)
+    def incomplete_checks(self) -> list[CheckResult]:
+        return [c for c in self.checks if c.is_incomplete]
 
     @property
-    def high_count(self) -> int:
-        return sum(1 for f in self.findings if f.severity == Severity.HIGH)
+    def is_complete(self) -> bool:
+        return not self.incomplete_checks
 
-    def exit_code(self, fail_on: str = "critical") -> int:
-        """Retourne un code de sortie basé sur le seuil de sévérité.
-
-        Args:
-            fail_on: Seuil minimum pour échouer ("critical", "high", "medium", "low").
-
-        Returns:
-            0 si OK, 1 si des findings dépassent le seuil.
-        """
-        threshold = SEVERITY_RANK.get(Severity(fail_on), 4)
+    def severity_counts(self) -> dict[Severity, int]:
+        counts = dict.fromkeys(Severity, 0)
         for finding in self.findings:
-            if SEVERITY_RANK.get(finding.severity, 0) >= threshold:
-                return 1
+            counts[finding.severity] += 1
+        return counts
+
+    def blocking_findings(self, fail_on: str = "critical") -> list[Finding]:
+        threshold = SEVERITY_RANK[Severity(fail_on)]
+        return [f for f in self.findings if SEVERITY_RANK[f.severity] >= threshold]
+
+    def exit_code(self, fail_on: str = "critical", allow_incomplete: bool = False) -> int:
+        """Return 1 for blocking findings, 2 for an incomplete scan, otherwise 0.
+
+        An incomplete scan must never pass for a clean one.
+        """
+        if self.blocking_findings(fail_on):
+            return 1
+        if not self.is_complete and not allow_incomplete:
+            return 2
         return 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ScanResult":
+        return cls(
+            findings=[Finding(**f) for f in data.get("findings", [])],
+            stacks_scanned=list(data.get("stacks_scanned", [])),
+            duration_seconds=float(data.get("duration_seconds", 0.0)),
+            checks=[CheckResult(**c) for c in data.get("checks", [])],
+        )

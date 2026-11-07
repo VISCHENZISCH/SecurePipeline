@@ -1,75 +1,155 @@
-# SecurePipeline
+<h1 align="center">SecurePipeline</h1>
 
-**SecurePipeline** est un outil CLI DevSecOps multi-stack, conçu pour analyser automatiquement un dépôt de code, détecter les stacks technologiques présentes et exécuter les contrôles de sécurité adaptés de manière transparente.
+<p align="center">
+  <strong>Multi-stack DevSecOps security scanner for your terminal and your CI.</strong>
+</p>
 
-## Fonctionnalités
+<p align="center">
+  Created by <a href="https://github.com/VISCHENZISCH"><strong>Félix TOVIGNAN</strong></a>
+  ·
+  <a href="https://github.com/VISCHENZISCH/SecurePipeline"><strong>VISCHENZISCH/SecurePipeline</strong></a>
+</p>
 
-- **Détection Automatique** : Identifie la stack (Python, Node.js, PHP, Flutter, Docker, Kubernetes) sans configuration.
-- **Analyse Statique (SAST)** : Utilise Semgrep et Bandit pour détecter les patterns de code dangereux.
-- **Audit de Dépendances** : Scanne les vulnérabilités (CVE) via npm audit, composer audit, pip-audit et dart pub.
-- **Audit d'Infrastructure (IaC)** : Linting de Dockerfile (Hadolint), scan d'images (Trivy), analyse de manifests K8s (kube-score, Checkov, kubesec).
-- **Détection de Secrets** : Recherche de clés API, tokens et mots de passe avec Gitleaks.
-- **Intégration CI/CD** : Mode headless parfait pour GitHub Actions avec génération de rapports Markdown.
-- **Interface CLI interactive** : Menu terminal léger sans dépendance d'affichage externe.
+<p align="center">
+  <a href="https://github.com/VISCHENZISCH/SecurePipeline/stargazers"><img src="https://img.shields.io/github/stars/VISCHENZISCH/SecurePipeline?style=flat" alt="GitHub stars"></a>
+  <a href="https://github.com/VISCHENZISCH/SecurePipeline/commits/main"><img src="https://img.shields.io/github/last-commit/VISCHENZISCH/SecurePipeline" alt="Last commit"></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-3776AB" alt="Python 3.11+">
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/security-policy-brightgreen" alt="Security policy"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <img src="docs/assets/logos/python.svg" width="36" height="36" alt="Python" title="Python">&nbsp;&nbsp;
+  <img src="docs/assets/logos/nodedotjs.svg" width="36" height="36" alt="Node.js" title="Node.js">&nbsp;&nbsp;
+  <img src="docs/assets/logos/php.svg" width="36" height="36" alt="PHP" title="PHP">&nbsp;&nbsp;
+  <img src="docs/assets/logos/flutter.svg" width="36" height="36" alt="Flutter" title="Flutter">&nbsp;&nbsp;
+  <img src="docs/assets/logos/docker.svg" width="36" height="36" alt="Docker" title="Docker">&nbsp;&nbsp;
+  <img src="docs/assets/logos/kubernetes.svg" width="36" height="36" alt="Kubernetes" title="Kubernetes">&nbsp;&nbsp;
+  <img src="docs/assets/logos/githubactions.svg" width="36" height="36" alt="GitHub Actions" title="GitHub Actions">
+</p>
+
+SecurePipeline detects the technologies in a repository, runs the matching security tools in parallel, and clearly reports anything it could not verify.
+
+<p align="center">
+  <img src="docs/assets/screenshots/menu.png" width="700" alt="SecurePipeline interactive menu with the ASCII logo, project state and options">
+</p>
+
+## Features
+
+- **Automatic detection**: Python, Node.js, PHP, Flutter, Docker and Kubernetes, with no configuration.
+- **Fast by design**: tools run in parallel, Semgrep runs once for all stacks, and dependency folders are skipped.
+- **Static analysis**: Semgrep and Bandit, plus bundled rules for JavaScript/TypeScript and PHP.
+- **Dependency audit**: pip-audit, npm audit, composer audit and dart pub outdated.
+- **Infrastructure audit**: Hadolint, Trivy, kube-score, Checkov and kubesec.
+- **Secret detection**: Gitleaks runs on every project, and secrets are redacted from reports.
+- **Reliable results**: a missing or failing tool makes the scan "incomplete" instead of declaring it clean.
+- **Verified tools**: binaries use pinned versions and are checked against a SHA-256 before being installed.
+- **CI/CD ready**: precise exit codes, readable logs, and Markdown, HTML and JSON reports.
+
+## Supported stacks
+
+|                                                                            | Stack            | Tools                                                                |
+| -------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------- |
+|                                                                            | **All projects** | Gitleaks                                                             |
+| <img src="docs/assets/logos/python.svg" width="20" height="20" alt="">     | **Python**       | pip-audit, Bandit, Semgrep                                           |
+| <img src="docs/assets/logos/nodedotjs.svg" width="20" height="20" alt="">  | **Node.js**      | npm audit, Semgrep with bundled rules                                |
+| <img src="docs/assets/logos/php.svg" width="20" height="20" alt="">        | **PHP**          | composer audit, Semgrep with bundled rules                           |
+| <img src="docs/assets/logos/flutter.svg" width="20" height="20" alt="">    | **Flutter**      | dart pub outdated (outdated dependencies only, no SAST or CVE audit) |
+| <img src="docs/assets/logos/docker.svg" width="20" height="20" alt="">     | **Docker**       | Hadolint, Trivy                                                      |
+| <img src="docs/assets/logos/kubernetes.svg" width="20" height="20" alt=""> | **Kubernetes**   | kube-score, Checkov, kubesec                                         |
+
+Runs on
+<img src="docs/assets/logos/linux.svg" width="16" height="16" alt=""> Linux,
+<img src="docs/assets/logos/apple.svg" width="16" height="16" alt=""> macOS and
+<img src="docs/assets/logos/windows.svg" width="16" height="16" alt=""> Windows.
+See [platform notes](docs/INSTALL.md#platforms) for the exceptions.
 
 ## Installation
 
-### Via Python (Recommandé pour usage local)
+Requires Python 3.11+ and Git.
 
 ```bash
-# 1. Cloner le projet
 git clone https://github.com/VISCHENZISCH/SecurePipeline.git
 cd SecurePipeline
-
-# 2. Créer un environnement virtuel
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 3. Installer
-pip install -e .
+./install.sh            # Windows: .\install.ps1
 ```
 
-*Note : Les outils de sécurité (trivy, semgrep, gitleaks, etc.) doivent être installés sur votre système.*
+<p align="center">
+  <img src="docs/assets/screenshots/install-complete.png" width="640" alt="Installation script finishing successfully">
+</p>
 
-### Via Docker (Recommandé pour CI/CD)
+The script creates `.venv`, then installs the project and its tools. `npm`, `composer` and `dart` are installed separately if you need them. Details: [docs/INSTALL.md](docs/INSTALL.md).
 
-L'image Docker contient toutes les dépendances requises :
+## Usage
+
+### Interactive menu
+
+```bash
+.venv/bin/securepipeline
+```
+
+The menu, shown at the top of this page, displays the current project, its stacks, the missing tools and the last scan summary. Press `1` to scan the current project, or `2` to scan another one right away.
+
+### Scan progress
+
+Each tool shows its live status, and a check mark as soon as it has run. The scan ends with a clear verdict and the number of findings per severity.
+
+### Commands
+
+Examples below assume that `.venv` is activated.
+
+```bash
+securepipeline scan                        # Scan the current directory
+securepipeline scan /path --fail-on high   # Fail from "high" severity
+securepipeline scan . --format both        # Markdown and HTML reports
+securepipeline detect                      # Show stacks and planned tools
+securepipeline tools check                 # Show tool status
+securepipeline tools install               # Install the missing tools
+```
+
+### Exit codes
+
+| Code | Meaning                                           |
+| ---- | ------------------------------------------------- |
+| `0`  | No finding at the threshold and a complete scan   |
+| `1`  | At least one finding at the `--fail-on` threshold |
+| `2`  | Incomplete scan (tool missing or failed) or error |
+
+Reports are written to `.securepipeline/reports/`. Full guide: [docs/USAGE.md](docs/USAGE.md).
+
+### Docker
 
 ```bash
 docker build -t securepipeline:latest .
-docker run --rm -v "${PWD}:/project:ro" securepipeline:latest scan /project
+docker compose run --rm scanner
 ```
 
-## Utilisation
+With rootless Docker: `env UID=0 GID=0 docker compose run --rm scanner`.
 
-### Mode Interactif
+### <img src="docs/assets/logos/githubactions.svg" width="18" height="18" alt=""> GitHub Actions
 
-Lance le menu interactif terminal :
+The workflow in [.github/workflows/securepipeline.yml](.github/workflows/securepipeline.yml) runs the tests, scans the repository, uploads the reports and comments on pull requests.
+
+## Development
 
 ```bash
-securepipeline scan /chemin/vers/projet
+pip install -e ".[dev,tools]"
+pytest
+ruff check .
 ```
 
-### Mode CI/CD (Headless)
+## Security
 
-Idéal pour les pipelines automatisés. Échoue avec un code `1` si des vulnérabilités critiques sont trouvées :
+To report a vulnerability, please follow the [security policy](SECURITY.md). DevSecOps recommendations are in [docs/DEVSECOPS.md](docs/DEVSECOPS.md).
 
-```bash
-securepipeline scan . --fail-on critical
-```
+## License
 
-*Le rapport sera généré dans `.securepipeline/reports/securepipeline-report.md`.*
+Released under the [MIT License](LICENSE).
 
-Consultez [docs/USAGE.md](docs/USAGE.md) pour l'utilisation complète.
+## Author
 
-## Architecture des Modules
+<img src="docs/assets/logos/github.svg" width="16" height="16" alt=""> **Félix TOVIGNAN**, [@VISCHENZISCH](https://github.com/VISCHENZISCH)
 
-| Stack | Outils Intégrés |
-|---|---|
-| **Global** | Gitleaks (Secrets) |
-| **Python** | pip-audit (Dépendances), Bandit (SAST), Semgrep |
-| **Node.js** | npm audit, Semgrep |
-| **PHP** | composer audit, Semgrep |
-| **Flutter**| dart pub outdated, Semgrep |
-| **Docker** | Hadolint (Dockerfile), Trivy (Image) |
-| **Kubernetes**| kube-score, Checkov, kubesec |
+If SecurePipeline helps you, [star the repository](https://github.com/VISCHENZISCH/SecurePipeline).
+
+Logos are trademarks of their respective owners. Most come from [Simple Icons](https://simpleicons.org/).

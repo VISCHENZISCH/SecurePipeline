@@ -1,19 +1,11 @@
-"""SecurePipeline - Logging minimal."""
+"""Internal logger, silent by default: user-facing output goes through the UI."""
 
 import logging
+import os
 import sys
 
 
-def get_logger(name: str = "securepipeline", level: int = logging.WARNING) -> logging.Logger:
-    """Cree un logger basique.
-
-    Args:
-        name: Nom du logger.
-        level: Niveau de log (WARNING par defaut pour ne pas polluer la sortie CLI).
-
-    Returns:
-        Logger configure.
-    """
+def get_logger(name: str = "securepipeline", level: int | None = None) -> logging.Logger:
     logger = logging.getLogger(name)
 
     if not logger.handlers:
@@ -21,8 +13,12 @@ def get_logger(name: str = "securepipeline", level: int = logging.WARNING) -> lo
         handler.setFormatter(logging.Formatter("  [%(levelname)s] %(message)s"))
         logger.addHandler(handler)
 
+    if level is None:
+        requested = os.environ.get("SECUREPIPELINE_LOG_LEVEL", "WARNING").upper()
+        level = logging.getLevelNamesMapping().get(requested, logging.WARNING)
+
     logger.setLevel(level)
     return logger
 
-# Logger global (silencieux par defaut, les messages passent par display.py)
+
 log = get_logger()

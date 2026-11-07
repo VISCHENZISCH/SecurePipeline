@@ -1,8 +1,6 @@
-"""SecurePipeline - Détecteur de stacks """
+"""Technology stack detection."""
 
 from pathlib import Path
-
-# detector.py::Signatures de détection----------------------------------------------#
 
 STACK_SIGNATURES: dict[str, list[str]] = {
     "python":  ["requirements.txt", "setup.py", "pyproject.toml", "Pipfile", "poetry.lock"],
@@ -14,26 +12,11 @@ STACK_SIGNATURES: dict[str, list[str]] = {
 }
 
 
-def detect_stacks(path: str) -> list[str]:
-    """Détecte les stacks technologiques présentes dans le projet.
-
-    Args:
-        path: Chemin du projet à analyser.
-
-    Returns:
-        Liste des noms de stacks détectées.
-    """
-    project_path = Path(path).resolve()
-    detected: list[str] = []
-
-    if not project_path.exists():
-        return detected
-
-    for stack_name, signatures in STACK_SIGNATURES.items():
-        for sig in signatures:
-            target = project_path / sig
-            if target.exists():
-                detected.append(stack_name)
-                break
-
-    return sorted(detected)
+def detect_stacks(path: str | Path) -> list[str]:
+    """Return the sorted names of the stacks found at the project root."""
+    root = Path(path).resolve()
+    return sorted(
+        stack
+        for stack, signatures in STACK_SIGNATURES.items()
+        if any((root / signature).exists() for signature in signatures)
+    )

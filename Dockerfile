@@ -1,44 +1,31 @@
 FROM python:3.11-slim
 
-# Éviter les prompts lors des installations apt
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Installer les dépendances systèmes de base
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    curl \
-    git \
-    apt-transport-https \
-    gnupg \
-    lsb-release \
-    # Ajout d'outils requis
-    npm \
-    php-cli \
-    composer \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git npm php-cli composer \
     && rm -rf /var/lib/apt/lists/*
 
-# Installer Trivy
-RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | tee /usr/share/keyrings/trivy.gpg > /dev/null \
-    && echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | tee -a /etc/apt/sources.list.d/trivy.list \
-    && apt-get update \
-    && apt-get install -y trivy \
-    && rm -rf /var/lib/apt/lists/*
-
-# Installer Hadolint
-RUN wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64 \
-    && chmod +x /usr/local/bin/hadolint
-
-# Installer Gitleaks
-RUN wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz | tar -xz -C /usr/local/bin gitleaks
-
-# Préparer l'application
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY securepipeline/ securepipeline/
 
-# Installer SecurePipeline et les dépendances Python (semgrep, bandit, etc.)
-RUN pip install --no-cache-dir -e . \
-    && pip install --no-cache-dir semgrep bandit pip-audit checkov
+RUN pip install ".[tools]" \
+    && securepipeline tools install --yes --bin-dir /usr/local/bin
+
+# The mounted repository belongs to another user, which git would otherwise refuse.
+RUN git config --system --add safe.directory '*' \
+    && useradd --uid 1000 --create-home scanner \
+    && install -d -m 1777 /cache
+
+# HOME points to /tmp so that the container's root filesystem can stay read-only.
+ENV HOME=/tmp \
+    TRIVY_CACHE_DIR=/cache/trivy
+
+USER 1000
+WORKDIR /project
 
 ENTRYPOINT ["securepipeline"]
 CMD ["--help"]

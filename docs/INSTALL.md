@@ -1,61 +1,56 @@
-# Guide d'Installation de SecurePipeline
+# Installation guide
 
-L'installation de SecurePipeline a été entièrement automatisée. Les scripts d'installation se chargent de configurer un environnement virtuel Python et de télécharger toutes les dépendances ainsi que les binaires de sécurité externes (Trivy, Gitleaks, Hadolint, kube-score) pour qu'ils soient accessibles uniquement depuis l'environnement du projet.
+The installation scripts create a virtual environment and install the project and its security tools into it. The binaries (Gitleaks, Trivy, Hadolint, kube-score, kubesec) use pinned versions and are verified with SHA-256 before being installed.
 
-## Prérequis
+## Prerequisites
 
-Avant de lancer l'installation, assurez-vous d'avoir :
-- **Python 3.11+** installé et ajouté au PATH.
-- **Git** installé et ajouté au PATH.
-
-*(Note : Pour le scan d'infrastructures locales spécifiques comme Node.js ou PHP, assurez-vous d'avoir `npm` ou `php-cli` installés sur votre système).*
+- **Python 3.11+** and **Git** on the PATH.
+- Depending on the stacks to scan: `npm`, `composer` or `dart`, which these scripts do not install.
 
 ---
 
-##  Installation Automatique
+## Automatic installation
 
-### Sous Linux / macOS
+### Linux / macOS
 
-1. Ouvrez un terminal dans le dossier du projet.
-2. Rendez le script exécutable et lancez-le :
-   ```bash
-   chmod +x install.sh
-   ./install.sh
-   ```
-
-### Sous Windows
-
-1. Ouvrez **PowerShell** dans le dossier du projet.
-2. Exécutez le script d'installation :
-   ```powershell
-   .\install.ps1
-   ```
-   *(Si l'exécution des scripts est désactivée, lancez d'abord `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`)*
-
----
-
-##  Utilisation
-
-L'outil installe tous les utilitaires directement dans son propre environnement virtuel pour ne pas polluer votre système. Par conséquent, vous devez **toujours activer l'environnement** avant de l'utiliser.
-
-### 1. Activer l'environnement
-
-**Sous Linux / macOS :**
 ```bash
-source .venv/bin/activate
+./install.sh
 ```
 
-**Sous Windows (PowerShell) :**
+### Windows
+
 ```powershell
-.\.venv\Scripts\Activate.ps1
+.\install.ps1
 ```
 
-### 2. Lancer l'outil
+*(If script execution is disabled, first run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`.)*
 
-Une fois l'environnement activé (vous verrez un préfixe `(.venv)` dans votre terminal), lancez simplement l'outil :
+kubesec has no Windows binary: on this system, a Kubernetes project gives an incomplete scan (code 2), unless you use `--allow-incomplete`.
+
+---
+
+## Usage
+
+The tool finds the binaries of its virtual environment by itself. You can activate the environment or call the executable directly:
+
 ```bash
-securepipeline
+.venv/bin/securepipeline                  # Linux / macOS
+.\.venv\Scripts\securepipeline.exe        # Windows
 ```
 
-> [!TIP]
-> Pour quitter l'environnement virtuel après votre session, tapez la commande `deactivate`.
+---
+
+## Managing tools
+
+```bash
+securepipeline tools check                # Status of each tool
+securepipeline tools install              # Install the missing ones
+securepipeline tools install trivy        # Reinstall a specific tool
+securepipeline tools install --yes --bin-dir /usr/local/bin
+```
+
+Binaries go to the active virtual environment, otherwise to `~/.local/bin`. Versions are defined in one place: [securepipeline/tools/catalog.py](../securepipeline/tools/catalog.py).
+
+## Platforms
+
+Binaries are available for Linux and macOS (amd64 and arm64) and Windows (amd64), with two exceptions: no Hadolint for macOS arm64, and no kubesec for Windows.

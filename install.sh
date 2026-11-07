@@ -1,47 +1,42 @@
 #!/usr/bin/env bash
 set -e
 
-echo "#################### SecurePipeline #####################"
-echo "                    Installation Linux                   "
-echo "#################### SecurePipeline #####################"
-
+banner() {
+    local title="$1" width="${2:-80}"
+    local left=$(( (width - ${#title}) / 2 ))
+    printf '%*s\n' "$width" '' | tr ' ' '*'
+    printf '%*s%s\n' "$left" '' "$title"
+    printf '%*s\n' "$width" '' | tr ' ' '*'
+}
+banner "Linux installation"
+echo .
 if ! command -v python3 &> /dev/null; then
-    echo "[!] python3 n'est pas installé. Veuillez l'installer (3.11+)."
+    echo "[!] python3 is not installed. Please install it (3.11+)."
+    exit 1
+fi
+
+if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then
+    echo "[!] Python 3.11 or newer is required."
     exit 1
 fi
 
 if ! command -v git &> /dev/null; then
-    echo "[!] git n'est pas installé. Veuillez l'installer."
+    echo "[!] git is not installed. Please install it."
     exit 1
 fi
 
-echo "[+] Création de l'environnement virtuel .venv..."
+echo "[+] Creating the .venv virtual environment..."
 python3 -m venv .venv
-source .venv/bin/activate
 
-echo "[+] Installation du projet et des outils Python..."
-pip install --upgrade pip
-pip install -e .[dev]
-pip install semgrep bandit pip-audit checkov
+echo "[+] Installing the project and the Python tools..."
+.venv/bin/python -m pip install --quiet --upgrade pip
+.venv/bin/python -m pip install --quiet -e ".[dev,tools]"
 
-BIN_DIR=".venv/bin"
+echo "[+] Installing the binaries (pinned versions and SHA-256)..."
+.venv/bin/securepipeline tools install --yes
 
-echo "[+] Téléchargement de Gitleaks..."
-curl -sL "https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz" | tar -xz -C $BIN_DIR gitleaks
-
-echo "[+] Téléchargement de Trivy..."
-curl -sL "https://github.com/aquasecurity/trivy/releases/download/v0.49.1/trivy_0.49.1_Linux-64bit.tar.gz" | tar -xz -C $BIN_DIR trivy
-
-echo "[+] Téléchargement de Hadolint..."
-curl -sLo $BIN_DIR/hadolint "https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64"
-chmod +x $BIN_DIR/hadolint
-
-echo "[+] Téléchargement de kube-score..."
-curl -sLo $BIN_DIR/kube-score "https://github.com/zegl/kube-score/releases/download/v1.17.0/kube-score_1.17.0_linux_amd64"
-chmod +x $BIN_DIR/kube-score
-
-echo "################### SecurePipeline ###################"
-echo "Installation terminée avec succès !"
-echo "Pour lancer l'outil, activez d'abord l'environnement :"
-echo "  source .venv/bin/activate"
-echo "  securepipeline"
+echo
+printf '*%.0s' $(seq 1 80); echo
+echo "Installation completed successfully!"
+echo "To start the tool:"
+echo "  .venv/bin/securepipeline"

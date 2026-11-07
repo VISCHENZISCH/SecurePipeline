@@ -1,1 +1,1 @@
-"""SecurePipeline - Utilitaires."""
+"""Shared helpers."""
