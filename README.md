@@ -30,10 +30,6 @@
 
 SecurePipeline detects the technologies in a repository, runs the matching security tools in parallel, and clearly reports anything it could not verify.
 
-<p align="center">
-  <img src="docs/assets/screenshots/menu.png" width="700" alt="SecurePipeline interactive menu with the ASCII logo, project state and options">
-</p>
-
 ## Features
 
 - **Automatic detection**: Python, Node.js, PHP, Flutter, Docker and Kubernetes, with no configuration.
@@ -75,6 +71,10 @@ cd SecurePipeline
 ```
 
 <p align="center">
+  <img src="docs/assets/screenshots/install-start.png" width="640" alt="Installation script starting with its banner">
+</p>
+
+<p align="center">
   <img src="docs/assets/screenshots/install-complete.png" width="640" alt="Installation script finishing successfully">
 </p>
 
@@ -88,7 +88,7 @@ The script creates `.venv`, then installs the project and its tools. `npm`, `com
 .venv/bin/securepipeline
 ```
 
-The menu, shown at the top of this page, displays the current project, its stacks, the missing tools and the last scan summary. Press `1` to scan the current project, or `2` to scan another one right away.
+The menu displays the current project, its stacks, the missing tools and the last scan summary. Press `1` to scan the current project, or `2` to scan another one right away.
 
 ### Scan progress
 
