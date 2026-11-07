@@ -15,7 +15,14 @@ def supports_color() -> bool:
     return sys.stdout.isatty() and os.environ.get("TERM") != "dumb"
 
 
+def supports_unicode() -> bool:
+    """Braille frames and check marks need a Unicode output encoding."""
+    encoding = getattr(sys.stdout, "encoding", None) or ""
+    return "utf" in encoding.lower()
+
+
 COLOR = supports_color()
+UNICODE = supports_unicode()
 
 
 def _style(code: str) -> str:
@@ -40,12 +47,15 @@ WHITE = rgb(230, 230, 230)
 GRAY = rgb(135, 135, 145)
 DARK_GRAY = rgb(72, 72, 78)
 
-CHECK = "✔"
-CROSS = "✖"
-WARN = "▲"
-BULLET = "●"
-DOT = "·"
-ARROW = "→"
+CHECK = "✓" if UNICODE else "+"
+CROSS = "✗" if UNICODE else "x"
+WARN = "!"
+BULLET = "•" if UNICODE else "*"
+DOT = "·" if UNICODE else "."
+ARROW = "›" if UNICODE else "->"
+
+# Two dots circling the edge of a Braille cell; ASCII can only bounce up and down.
+SPINNER = "⠉⠘⠰⢠⣀⡄⠆⠃" if UNICODE else ".:':"
 
 SEVERITY_COLORS = {
     Severity.CRITICAL: RED,

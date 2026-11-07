@@ -12,6 +12,7 @@ from securepipeline.ui.task_panel import (
     progress_bar,
     running_progress,
 )
+from securepipeline.ui.theme import CHECK, CROSS, SPINNER, WARN
 
 
 def panel_output(capsys, live: bool) -> str:
@@ -38,14 +39,14 @@ def test_empty_panel_does_not_divide_by_zero():
 
 def test_tools_that_ran_get_a_check_even_with_findings(capsys):
     output = panel_output(capsys, live=False)
-    assert re.search(r"✔ bandit .* no findings", output)
-    assert re.search(r"✔ semgrep .* 2 findings", output)
+    assert re.search(rf"{re.escape(CHECK)} bandit .* no findings", output)
+    assert re.search(rf"{re.escape(CHECK)} semgrep .* 2 findings", output)
 
 
 def test_tools_that_did_not_run_get_no_check(capsys):
     output = panel_output(capsys, live=False)
-    assert re.search(r"▲ trivy .* not installed", output)
-    assert re.search(r"✖ npm .* timed out", output)
+    assert re.search(rf"{re.escape(WARN)} trivy .* not installed", output)
+    assert re.search(rf"{re.escape(CROSS)} npm .* timed out", output)
 
 
 def test_live_panel_ends_with_full_bar_and_restored_cursor(capsys):
@@ -62,7 +63,7 @@ def test_running_task_shows_spinner_and_elapsed_time(capsys):
     panel.start("bandit")
     panel._draw()
     output = capsys.readouterr().out
-    assert "| bandit" in output
+    assert f"{SPINNER[0]} bandit" in output
     assert "running" in output
     assert "0%" in output
 

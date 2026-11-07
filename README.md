@@ -64,10 +64,27 @@ See [platform notes](docs/INSTALL.md#platforms) for the exceptions.
 
 Requires Python 3.11+ and Git.
 
+### Linux and macOS
+
 ```bash
 git clone https://github.com/VISCHENZISCH/SecurePipeline.git
 cd SecurePipeline
-./install.sh            # Windows: .\install.ps1
+./install.sh
+```
+
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/VISCHENZISCH/SecurePipeline.git
+cd SecurePipeline
+.\install.ps1
+```
+
+If PowerShell blocks the script because of its execution policy, allow it for the current session only:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\install.ps1
 ```
 
 <p align="center">
@@ -84,8 +101,16 @@ The script creates `.venv`, then installs the project and its tools. `npm`, `com
 
 ### Interactive menu
 
+On Linux and macOS:
+
 ```bash
 .venv/bin/securepipeline
+```
+
+On Windows, the path uses `Scripts` instead of `bin`:
+
+```powershell
+.\.venv\Scripts\securepipeline.exe
 ```
 
 The menu displays the current project, its stacks, the missing tools and the last scan summary. Press `1` to scan the current project, or `2` to scan another one right away.

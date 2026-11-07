@@ -19,12 +19,12 @@ from securepipeline.ui.theme import (
     ORANGE,
     RED,
     RESET,
+    SPINNER,
     WARN,
     WHITE,
     YELLOW,
 )
 
-SPINNER = "|/-\\"
 REFRESH_SECONDS = 0.1
 BAR_WIDTH = 24
 BAR_FILLED = "█"
