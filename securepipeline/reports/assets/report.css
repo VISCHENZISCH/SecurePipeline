@@ -56,7 +56,7 @@ body {
 .doc-header .brand { display: flex; align-items: center; gap: 8px; }
 .doc-header .brand strong { color: var(--ink); font-family: var(--font-display); font-size: 13px; }
 .mark { width: auto; height: 22px; flex: none; }
-.cover-logo { display: block; width: 200px; height: auto; margin-bottom: 40px; }
+.cover-logo { display: block; width: 360px; max-width: 100%; height: auto; margin: 8px auto 56px; }
 .doc-footer {
     margin-top: 56px;
     padding-top: 12px;
@@ -234,5 +234,6 @@ details summary:focus-visible { outline: 2px solid var(--link); outline-offset: 
     html, body { background: #FFFFFF; padding: 0; font-size: 9.5pt; }
     .page { max-width: none; padding: 0; box-shadow: none; }
     .chapter { break-before: page; margin-top: 0; }
+    .cover-logo { width: 90mm; margin: 6mm auto 14mm; }
     tr, .summary { break-inside: avoid; }
 }
