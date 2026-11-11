@@ -19,13 +19,13 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/logos/python.svg" width="36" height="36" alt="Python" title="Python">&nbsp;&nbsp;
-  <img src="docs/assets/logos/nodedotjs.svg" width="36" height="36" alt="Node.js" title="Node.js">&nbsp;&nbsp;
-  <img src="docs/assets/logos/php.svg" width="36" height="36" alt="PHP" title="PHP">&nbsp;&nbsp;
-  <img src="docs/assets/logos/flutter.svg" width="36" height="36" alt="Flutter" title="Flutter">&nbsp;&nbsp;
-  <img src="docs/assets/logos/docker.svg" width="36" height="36" alt="Docker" title="Docker">&nbsp;&nbsp;
-  <img src="docs/assets/logos/kubernetes.svg" width="36" height="36" alt="Kubernetes" title="Kubernetes">&nbsp;&nbsp;
-  <img src="docs/assets/logos/githubactions.svg" width="36" height="36" alt="GitHub Actions" title="GitHub Actions">
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/python.svg" width="36" height="36" alt="Python" title="Python">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/nodedotjs.svg" width="36" height="36" alt="Node.js" title="Node.js">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/php.svg" width="36" height="36" alt="PHP" title="PHP">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/flutter.svg" width="36" height="36" alt="Flutter" title="Flutter">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/docker.svg" width="36" height="36" alt="Docker" title="Docker">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/kubernetes.svg" width="36" height="36" alt="Kubernetes" title="Kubernetes">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/githubactions.svg" width="36" height="36" alt="GitHub Actions" title="GitHub Actions">
 </p>
 
 SecurePipeline detects the technologies in a repository, runs the matching security tools in parallel, and clearly reports anything it could not verify.
@@ -47,24 +47,35 @@ SecurePipeline detects the technologies in a repository, runs the matching secur
 |                                                                            | Stack            | Tools                                                                |
 | -------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------- |
 |                                                                            | **All projects** | Gitleaks                                                             |
-| <img src="docs/assets/logos/python.svg" width="20" height="20" alt="">     | **Python**       | pip-audit, Bandit, Semgrep                                           |
-| <img src="docs/assets/logos/nodedotjs.svg" width="20" height="20" alt="">  | **Node.js**      | npm audit, Semgrep with bundled rules                                |
-| <img src="docs/assets/logos/php.svg" width="20" height="20" alt="">        | **PHP**          | composer audit, Semgrep with bundled rules                           |
-| <img src="docs/assets/logos/flutter.svg" width="20" height="20" alt="">    | **Flutter**      | dart pub outdated (outdated dependencies only, no SAST or CVE audit) |
-| <img src="docs/assets/logos/docker.svg" width="20" height="20" alt="">     | **Docker**       | Hadolint, Trivy                                                      |
-| <img src="docs/assets/logos/kubernetes.svg" width="20" height="20" alt=""> | **Kubernetes**   | kube-score, Checkov, kubesec                                         |
+| <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/python.svg" width="20" height="20" alt="">     | **Python**       | pip-audit, Bandit, Semgrep                                           |
+| <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/nodedotjs.svg" width="20" height="20" alt="">  | **Node.js**      | npm audit, Semgrep with bundled rules                                |
+| <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/php.svg" width="20" height="20" alt="">        | **PHP**          | composer audit, Semgrep with bundled rules                           |
+| <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/flutter.svg" width="20" height="20" alt="">    | **Flutter**      | dart pub outdated (outdated dependencies only, no SAST or CVE audit) |
+| <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/docker.svg" width="20" height="20" alt="">     | **Docker**       | Hadolint, Trivy                                                      |
+| <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/kubernetes.svg" width="20" height="20" alt=""> | **Kubernetes**   | kube-score, Checkov, kubesec                                         |
 
 Runs on
-<img src="docs/assets/logos/linux.svg" width="16" height="16" alt=""> Linux,
-<img src="docs/assets/logos/apple.svg" width="16" height="16" alt=""> macOS and
-<img src="docs/assets/logos/windows.svg" width="16" height="16" alt=""> Windows.
-See [platform notes](docs/INSTALL.md#platforms) for the exceptions.
+<img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/linux.svg" width="16" height="16" alt=""> Linux,
+<img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/apple.svg" width="16" height="16" alt=""> macOS and
+<img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/windows.svg" width="16" height="16" alt=""> Windows.
+See [platform notes](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/INSTALL.md#platforms) for the exceptions.
 
 ## Installation
 
 Requires Python 3.11+ and Git.
 
-### Linux and macOS
+### From PyPI
+
+[pipx](https://pipx.pypa.io/) installs SecurePipeline in its own environment, which keeps the Python tools (Semgrep, Checkov) away from your other packages:
+
+```bash
+pipx install "securepipeline[tools]"
+securepipeline tools install --yes --bin-dir ~/.local/bin
+```
+
+The second command downloads the binary tools (Gitleaks, Trivy, Hadolint...) at pinned versions and checks their SHA-256.
+
+### Linux and macOS, from source
 
 ```bash
 git clone https://github.com/VISCHENZISCH/SecurePipeline.git
@@ -72,7 +83,7 @@ cd SecurePipeline
 ./install.sh
 ```
 
-### Windows (PowerShell)
+### Windows (PowerShell), from source
 
 ```powershell
 git clone https://github.com/VISCHENZISCH/SecurePipeline.git
@@ -88,14 +99,14 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
 <p align="center">
-  <img src="docs/assets/screenshots/install-start.png" width="640" alt="Installation script starting with its banner">
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/screenshots/install-start.png" width="640" alt="Installation script starting with its banner">
 </p>
 
 <p align="center">
-  <img src="docs/assets/screenshots/install-complete.png" width="640" alt="Installation script finishing successfully">
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/screenshots/install-complete.png" width="640" alt="Installation script finishing successfully">
 </p>
 
-The script creates `.venv`, then installs the project and its tools. `npm`, `composer` and `dart` are installed separately if you need them. Details: [docs/INSTALL.md](docs/INSTALL.md).
+The script creates `.venv`, then installs the project and its tools. `npm`, `composer` and `dart` are installed separately if you need them. Details: [docs/INSTALL.md](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/INSTALL.md).
 
 ## Usage
 
@@ -140,7 +151,7 @@ securepipeline tools install               # Install the missing tools
 | `1`  | At least one finding at the `--fail-on` threshold |
 | `2`  | Incomplete scan (tool missing or failed) or error |
 
-Reports are written to `.securepipeline/reports/`. Full guide: [docs/USAGE.md](docs/USAGE.md).
+Reports are written to `.securepipeline/reports/`. Full guide: [docs/USAGE.md](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/USAGE.md).
 
 ### Docker
 
@@ -151,9 +162,9 @@ docker compose run --rm scanner
 
 With rootless Docker: `env UID=0 GID=0 docker compose run --rm scanner`.
 
-### <img src="docs/assets/logos/githubactions.svg" width="18" height="18" alt=""> GitHub Actions
+### <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/githubactions.svg" width="18" height="18" alt=""> GitHub Actions
 
-The workflow in [.github/workflows/securepipeline.yml](.github/workflows/securepipeline.yml) runs the tests, scans the repository, uploads the reports and comments on pull requests.
+The workflow in [.github/workflows/securepipeline.yml](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/.github/workflows/securepipeline.yml) runs the tests, scans the repository, uploads the reports and comments on pull requests.
 
 ## Development
 
@@ -165,15 +176,15 @@ ruff check .
 
 ## Security
 
-To report a vulnerability, please follow the [security policy](SECURITY.md). DevSecOps recommendations are in [docs/DEVSECOPS.md](docs/DEVSECOPS.md).
+To report a vulnerability, please follow the [security policy](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/SECURITY.md). DevSecOps recommendations are in [docs/DEVSECOPS.md](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/DEVSECOPS.md).
 
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/LICENSE).
 
 ## Author
 
-<img src="docs/assets/logos/github.svg" width="16" height="16" alt=""> **Félix TOVIGNAN**, [@VISCHENZISCH](https://github.com/VISCHENZISCH)
+<img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/github.svg" width="16" height="16" alt=""> **Félix TOVIGNAN**, [@VISCHENZISCH](https://github.com/VISCHENZISCH)
 
 If SecurePipeline helps you, [star the repository](https://github.com/VISCHENZISCH/SecurePipeline).
 

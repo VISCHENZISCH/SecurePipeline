@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,9 +8,27 @@ dynamic = ["version"]
 description = "Multi-stack DevSecOps security scanner"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["security", "devsecops", "sast", "sca", "secrets", "scanner", "ci", "semgrep", "trivy", "gitleaks"]
 authors = [
     {name = "Félix TOVIGNAN"},
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
 ]
 
 dependencies = [
@@ -20,6 +38,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/VISCHENZISCH/SecurePipeline"
 Issues = "https://github.com/VISCHENZISCH/SecurePipeline/issues"
+Documentation = "https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/USAGE.md"
+Changelog = "https://github.com/VISCHENZISCH/SecurePipeline/blob/main/CHANGELOG.md"
 Security = "https://github.com/VISCHENZISCH/SecurePipeline/security"
 
 [project.optional-dependencies]

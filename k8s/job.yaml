@@ -1,36 +1,42 @@
-apiVersion: apps/v1
-kind: Deployment
+# One-shot scan. SecurePipeline is a CLI that exits after the scan,
+# so it runs as a Job, not as a Deployment.
+#
+# Build the image, push it to your registry, then replace the image below,
+# ideally pinned by digest: registry.example.com/securepipeline@sha256:...
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: securepipeline
+  name: securepipeline-scan
   namespace: devsecops
   labels:
     app: securepipeline
-    version: "1.0"
+    app.kubernetes.io/version: "0.1.0"
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: securepipeline
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 3600
   template:
     metadata:
       labels:
         app: securepipeline
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
-        seccompProfile:
-          type: RuntimeDefault
+      restartPolicy: Never
 
       # The scanner does not need the Kubernetes API.
       automountServiceAccountToken: false
 
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+
       containers:
         - name: securepipeline
-          image: securepipeline:latest
-          imagePullPolicy: IfNotPresent
+          image: registry.example.com/securepipeline:0.1.0
+          imagePullPolicy: Always
 
           command: ["securepipeline", "scan", "/project", "--fail-on", "critical"]
 
@@ -42,7 +48,8 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-            runAsUser: 1000
+            runAsUser: 10001
+            runAsGroup: 10001
             capabilities:
               drop:
                 - ALL
@@ -51,9 +58,11 @@ spec:
             requests:
               cpu: "250m"
               memory: "256Mi"
+              ephemeral-storage: "256Mi"
             limits:
               cpu: "1000m"
               memory: "1Gi"
+              ephemeral-storage: "2Gi"
 
           volumeMounts:
             # Writable scratch space, required by the read-only root filesystem.
@@ -69,14 +78,14 @@ spec:
 
       volumes:
         - name: tmp-dir
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 256Mi
         - name: cache-dir
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 1Gi
         - name: reports-dir
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 128Mi
         - name: project-dir
-          # Replace with a PersistentVolumeClaim in production
+          # Replace with a PersistentVolumeClaim holding the code to scan.
           emptyDir: {}
-
-      # The container exits after the scan and must not restart forever.
-      restartPolicy: Never

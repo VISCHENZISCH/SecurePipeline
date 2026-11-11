@@ -17,14 +17,14 @@ RUN pip install ".[tools]" \
 
 # The mounted repository belongs to another user, which git would otherwise refuse.
 RUN git config --system --add safe.directory '*' \
-    && useradd --uid 1000 --create-home scanner \
+    && useradd --uid 10001 --create-home scanner \
     && install -d -m 1777 /cache
 
 # HOME points to /tmp so that the container's root filesystem can stay read-only.
 ENV HOME=/tmp \
     TRIVY_CACHE_DIR=/cache/trivy
 
-USER 1000
+USER 10001
 WORKDIR /project
 
 ENTRYPOINT ["securepipeline"]
