@@ -1,7 +1,7 @@
 """Tests for the terminal symbols."""
 
 import os
-import subprocess
+import subprocess  # nosec B404 - imports the theme in a fresh interpreter
 import sys
 from pathlib import Path
 
@@ -13,7 +13,7 @@ PRINT_SYMBOLS = (
 
 def symbols_with_encoding(encoding: str) -> str:
     """Import the theme in a new process, since it picks its symbols at import."""
-    result = subprocess.run(
+    result = subprocess.run(  # nosec B603 - runs this Python with a fixed script
         [sys.executable, "-c", PRINT_SYMBOLS],
         capture_output=True,
         check=True,

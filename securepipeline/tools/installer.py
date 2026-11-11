@@ -4,7 +4,7 @@ import hashlib
 import io
 import os
 import platform
-import subprocess
+import subprocess  # nosec B404 - runs pip with a fixed argument list
 import sys
 import tarfile
 import tempfile
@@ -96,7 +96,7 @@ def _install_binary(tool: BinaryTool, bin_dir: Path, plat: str) -> None:
 
 
 def _install_pip(packages: list[str]) -> None:
-    result = subprocess.run(
+    result = subprocess.run(  # nosec B603 - fixed pip command, no shell
         [sys.executable, "-m", "pip", "install", "-q", "--disable-pip-version-check", *packages],
         capture_output=True,
         encoding="utf-8",

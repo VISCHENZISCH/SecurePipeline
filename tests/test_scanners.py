@@ -2,7 +2,7 @@
 
 import json
 import shutil
-import subprocess
+import subprocess  # nosec B404 - builds a throwaway git repository
 
 import pytest
 
@@ -86,7 +86,7 @@ def test_gitleaks_failure_is_an_error(monkeypatch, tmp_path):
 def test_gitleaks_finding_never_contains_the_secret():
     finding = secrets_scanner.parse_leak({
         "RuleID": "aws", "Description": "AWS", "File": "a", "StartLine": 2,
-        "Match": "AKIASECRET", "Secret": "AKIASECRET", "Commit": "abcdef123456",
+        "Match": "AKIASECRET", "Secret": "AKIASECRET", "Commit": "abcdef123456",  # nosec B105 - fake secret
     })
     assert finding.severity is Severity.CRITICAL
     assert "AKIASECRET" not in json.dumps(vars(finding), default=str)
@@ -103,10 +103,10 @@ def test_gitleaks_detects_secret_outside_repository(tmp_path, fake_aws_key):
 @pytest.mark.skipif(shutil.which("gitleaks") is None, reason="gitleaks not installed")
 def test_gitleaks_detects_secret_in_git_history(tmp_path, fake_aws_key):
     git = ["git", "-c", "user.email=t@example.com", "-c", "user.name=t", "-C", str(tmp_path)]
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)  # nosec B603 B607 - test repository
     (tmp_path / "creds.txt").write_text(f'aws_access_key_id = "{fake_aws_key}"\n')
-    subprocess.run([*git, "add", "."], check=True)
-    subprocess.run([*git, "commit", "-qm", "x"], check=True)
+    subprocess.run([*git, "add", "."], check=True)  # nosec B603 - test repository
+    subprocess.run([*git, "commit", "-qm", "x"], check=True)  # nosec B603 - test repository
     assert secrets_scanner.SecretsScanner()._run(tmp_path)
 
 
@@ -177,6 +177,23 @@ def test_bandit_excludes_environments(monkeypatch, tmp_path):
     calls = fake_runner(monkeypatch, python_scanner, json.dumps({"results": []}))
     python_scanner.PythonScanner()._run_bandit(tmp_path)
     assert "*/.venv/*" in calls[0][calls[0].index("-x") + 1]
+
+
+def test_bandit_ignores_assert_only_in_tests(monkeypatch, tmp_path):
+    issue = {"test_id": "B101", "issue_severity": "LOW", "issue_confidence": "HIGH"}
+    results = [
+        {**issue, "filename": "tests/test_app.py"},
+        {**issue, "filename": "pkg/conftest.py"},
+        {**issue, "filename": "pkg/api_test.py"},
+        {**issue, "filename": "app/service.py"},
+        {**issue, "test_id": "B105", "filename": "tests/test_app.py"},
+    ]
+    fake_runner(monkeypatch, python_scanner, json.dumps({"results": results}))
+    findings = python_scanner.PythonScanner()._run_bandit(tmp_path)
+    assert [(f.rule_id, f.file_path) for f in findings] == [
+        ("B101", "app/service.py"),
+        ("B105", "tests/test_app.py"),
+    ]
 
 
 def test_bandit_promotes_certain_high_to_critical():

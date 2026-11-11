@@ -24,6 +24,9 @@ RUN git config --system --add safe.directory '*' \
 ENV HOME=/tmp \
     TRIVY_CACHE_DIR=/cache/trivy
 
+# A one-shot CLI: there is no long-running service to check.
+HEALTHCHECK NONE
+
 USER 10001
 WORKDIR /project
 

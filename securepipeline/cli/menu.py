@@ -1,7 +1,7 @@
 """Interactive menu."""
 
 import shlex
-import subprocess
+import subprocess  # nosec B404 - runs the user's own ! commands, without a shell
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -199,7 +199,7 @@ def _run_command(command: str) -> None:
         print_status("Type the command right after the !, for example !ls", "warning")
         return
     try:
-        subprocess.run(args, check=False)
+        subprocess.run(args, check=False)  # nosec B603 - the user typed this command
     except FileNotFoundError:
         print_status(
             f"Command not found: {args[0]}. Type it right after the !, for example !ls "

@@ -41,7 +41,19 @@ class PythonScanner(BaseScanner):
     def _run_bandit(self, root: Path) -> list[Finding]:
         excluded = ",".join(f"*/{name}/*" for name in sorted(EXCLUDED_DIRS))
         command = ["bandit", "-r", str(root), "-x", excluded, "-f", "json", "-q"]
-        return parse_bandit(load_json(run_command(command, cwd=root, timeout=300)))
+        findings = parse_bandit(load_json(run_command(command, cwd=root, timeout=300)))
+        return [f for f in findings if not (f.rule_id == "B101" and is_test_file(f.file_path))]
+
+
+def is_test_file(path: str) -> bool:
+    """pytest relies on assert, so B101 is only meaningful outside the tests."""
+    p = Path(path)
+    return (
+        p.name == "conftest.py"
+        or p.name.startswith("test_")
+        or p.stem.endswith("_test")
+        or any(part in ("test", "tests") for part in p.parent.parts)
+    )
 
 
 def _vulnerabilities(data: dict | list) -> list[dict]:

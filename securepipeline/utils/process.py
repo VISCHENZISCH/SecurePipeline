@@ -3,7 +3,7 @@
 import json
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404 - runs the security tools, never through a shell
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -55,7 +55,7 @@ def run_command(
     log.debug("Running: %s", " ".join(command))
 
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603 - argument list, no shell
             command,
             cwd=str(cwd) if cwd else None,
             capture_output=True,
