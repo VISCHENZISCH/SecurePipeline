@@ -1,4 +1,9 @@
-<h1 align="center">SecurePipeline</h1>
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/brand/securepipeline-logo-white.svg">
+    <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/brand/securepipeline-logo.svg" width="420" alt="SecurePipeline">
+  </picture>
+</h1>
 
 <p align="center">
   <strong>Multi-stack DevSecOps security scanner for your terminal and your CI.</strong>

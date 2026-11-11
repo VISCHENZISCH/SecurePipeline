@@ -20,8 +20,18 @@ PRINT_SCRIPT = (
 )
 
 
+def _asset(name: str) -> str:
+    return resources.files("securepipeline.reports").joinpath(f"assets/{name}").read_text(encoding="utf-8")
+
+
 def _stylesheet() -> str:
-    return resources.files("securepipeline.reports").joinpath("assets/report.css").read_text(encoding="utf-8")
+    return _asset("report.css")
+
+
+def _logo(name: str, css_class: str) -> str:
+    """Inline one of the bundled SVG logos; CSS sets its size."""
+    svg = _asset(name).strip()
+    return svg.replace("<svg ", f'<svg class="{css_class}" aria-hidden="true" ', 1)
 
 
 def _status_banner(result: ScanResult, counts: dict[Severity, int]) -> tuple[str, str]:
@@ -177,11 +187,12 @@ def generate_html(result: ScanResult, project_name: str = "Project") -> str:
 <body>
     <main class="page">
         <header class="doc-header">
-            <div class="brand"><span class="mark" aria-hidden="true">SP</span><strong>SecurePipeline</strong><span>Security scan report</span></div>
+            <div class="brand">{_logo("logo-mark.svg", "mark")}<strong>SecurePipeline</strong><span>Security scan report</span></div>
             <div>{project} &middot; {date_str}</div>
         </header>
 
         <section class="cover">
+            {_logo("logo.svg", "cover-logo")}
             <p class="overline">Security scan report</p>
             <h1>{project}</h1>
             <p class="subtitle">Static analysis, dependency audit, infrastructure checks and secret detection, run by SecurePipeline.</p>

@@ -55,15 +55,8 @@ body {
 }
 .doc-header .brand { display: flex; align-items: center; gap: 8px; }
 .doc-header .brand strong { color: var(--ink); font-family: var(--font-display); font-size: 13px; }
-.mark {
-    width: 20px; height: 20px;
-    border-radius: 5px;
-    background: var(--accent);
-    color: #FFFFFF;
-    font: 700 9px/20px var(--font-display);
-    text-align: center;
-    letter-spacing: .02em;
-}
+.mark { width: auto; height: 22px; flex: none; }
+.cover-logo { display: block; width: 200px; height: auto; margin-bottom: 40px; }
 .doc-footer {
     margin-top: 56px;
     padding-top: 12px;
