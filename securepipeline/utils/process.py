@@ -53,6 +53,11 @@ def run_command(
 ) -> CommandResult:
     """Run a command and capture its output; return_code is -1 if it could not run."""
     log.debug("Running: %s", " ".join(command))
+    # On Windows, tools such as npm are .cmd scripts: CreateProcess ignores PATHEXT,
+    # so "npm" alone gives WinError 2. shutil.which resolves the full path.
+    executable = shutil.which(command[0]) if command else None
+    if executable:
+        command = [executable, *command[1:]]
 
     try:
         result = subprocess.run(  # nosec B603 - argument list, no shell

@@ -28,7 +28,17 @@ INSTALL_WORKERS = 6
 
 
 def get_missing_tools() -> list[str]:
-    return [name for name in tool_descriptions() if not check_tool(name)]
+    """Return the tools that are absent but could be installed on this platform."""
+    return [
+        name for name in tool_descriptions()
+        if not check_tool(name) and is_available(name)
+    ]
+
+
+def is_available(name: str) -> bool:
+    """False for a binary tool that publishes no build for this platform (kubesec on Windows)."""
+    tool = BINARIES_BY_NAME.get(name)
+    return tool is None or current_platform() in tool.assets
 
 
 def current_platform() -> str:

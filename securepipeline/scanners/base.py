@@ -1,5 +1,6 @@
 """Base classes shared by the scanners."""
 
+import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Collection
 from dataclasses import dataclass
@@ -105,6 +106,19 @@ def load_json(result: CommandResult, ok_codes: Collection[int] = (0, 1)) -> Any:
     return data
 
 
+MAX_REASON = 160
+# "2026-11-11T20:57:31+01:00  FATAL  Fatal error  " prefix of Go tool logs (trivy...).
+_LOG_PREFIX = re.compile(r"^\d{4}-\d{2}-\d{2}T\S+\s+[A-Z]+\s+(?:Fatal error\s+)?")
+
+
 def _failure_reason(result: CommandResult) -> str:
     lines = [line.strip() for line in result.stderr.splitlines() if line.strip()]
-    return lines[-1][:160] if lines else f"return code {result.return_code}"
+    if not lines:
+        return f"return code {result.return_code}"
+    # Collapse tabs and spaces: a tab is one character but several columns, and
+    # it would break the width of the live progress panel.
+    reason = " ".join(_LOG_PREFIX.sub("", lines[-1]).split())
+    if len(reason) > MAX_REASON:
+        # Chained errors (Go, Python) put the root cause at the end: keep that part.
+        reason = "…" + reason[-(MAX_REASON - 1):]
+    return reason

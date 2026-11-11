@@ -36,7 +36,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "[+] Installing the binaries (pinned versions and SHA-256)..." -ForegroundColor Green
-# kubesec has no Windows binary: the Kubernetes module will report it.
+# kubesec has no Windows binary: it is not offered here, the Kubernetes module reports it.
 & ".\.venv\Scripts\securepipeline.exe" tools install --yes
 $InstallStatus = $LASTEXITCODE
 

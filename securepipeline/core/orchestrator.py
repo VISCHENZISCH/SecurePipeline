@@ -17,6 +17,7 @@ from securepipeline.core.models import (
 from securepipeline.scanners import get_scanners_for_stacks
 from securepipeline.scanners.base import Check, CheckSkipped, NothingToScan, PartialScan, ToolError
 from securepipeline.utils.logger import log
+from securepipeline.tools.installer import current_platform, is_available
 from securepipeline.utils.process import check_tool
 
 
@@ -83,7 +84,10 @@ def _run_check(module: str, check: Check, root: Path) -> tuple[CheckResult, list
     status = CheckStatus.OK
 
     if not check_tool(check.tool):
-        status, detail = CheckStatus.SKIPPED, TOOL_NOT_INSTALLED
+        if is_available(check.tool):
+            status, detail = CheckStatus.SKIPPED, TOOL_NOT_INSTALLED
+        else:
+            status, detail = CheckStatus.SKIPPED, f"not available on {current_platform()}"
     else:
         try:
             findings = check.run(root)
