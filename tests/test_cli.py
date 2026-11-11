@@ -243,7 +243,7 @@ def menu(monkeypatch, tmp_path, capsys):
 
 
 def test_menu_exits_on_end_of_input(menu):
-    assert "Scan this project" in menu()
+    assert "Scan current project" in menu()
 
 
 def test_menu_header_shows_project_state(menu, tmp_path):

@@ -16,7 +16,7 @@ The top of the menu shows the current project, its stacks, the missing tools and
 
 | Key | Action |
 |---|---|
-| `1` | Scan this project |
+| `1` | Scan current project (the folder shown as Project) |
 | `2` | Scan another project |
 | `3` | View last results |
 | `4` | Export HTML report (from the last results, without a new scan) |

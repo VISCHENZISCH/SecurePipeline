@@ -167,7 +167,7 @@ TOOLS_ITEM = MenuItem("5", "Check / install tools", _tools)
 
 MENU: tuple[tuple[str, tuple[MenuItem, ...]], ...] = (
     ("Scan", (
-        MenuItem("1", "Scan this project", _scan),
+        MenuItem("1", "Scan current project", _scan),
         MenuItem("2", "Scan another project", _scan, prepare=_choose_project),
     )),
     ("Results", (
