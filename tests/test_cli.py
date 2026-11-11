@@ -271,13 +271,13 @@ def test_menu_unknown_choice_runs_nothing(menu, monkeypatch):
     def forbidden(*_args, **_kwargs):
         raise AssertionError("no command must run")
 
-    monkeypatch.setattr(menu_module.subprocess, "run", forbidden)
+    monkeypatch.setattr(menu_module, "_spawn", forbidden)
     assert "Unknown choice: ls" in menu("ls", "q")
 
 
 def test_menu_bang_runs_command_without_shell(menu, monkeypatch):
     calls = []
-    monkeypatch.setattr(menu_module.subprocess, "run", lambda *a, **k: calls.append((a, k)))
+    monkeypatch.setattr(menu_module, "_spawn", lambda *a, **k: calls.append((a, k)))
     menu("!echo 'two words'", "", "q")
     assert calls[0][0][0] == ["echo", "two words"]
     assert "shell" not in calls[0][1]

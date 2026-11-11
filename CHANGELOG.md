@@ -10,7 +10,9 @@ First public release.
 
 ### Added
 
-- Automatic stack detection: Python, Node.js, PHP, Flutter, Docker and Kubernetes.
+- Automatic stack detection: Python, Node.js, PHP, Rust, Flutter, Docker and Kubernetes, at any depth of the repository, among the files git tracks.
+- Rust module: OSV-Scanner for known vulnerabilities (RustSec), cargo-deny for the project's `deny.toml` policy, and Semgrep Rust rules.
+- Dependency audits run in every folder that has its own manifest, such as `frontend/`. A folder that cannot be audited keeps the scan incomplete without hiding the other results.
 - Static analysis with Semgrep and Bandit, with bundled rules for JavaScript/TypeScript and PHP.
 - Dependency audit with pip-audit, npm audit, composer audit and dart pub outdated, with Python severities from OSV.dev.
 - Infrastructure audit with Hadolint, Trivy, kube-score, Checkov and kubesec.

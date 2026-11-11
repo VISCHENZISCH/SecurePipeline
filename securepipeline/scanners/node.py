@@ -10,9 +10,13 @@ from securepipeline.scanners.base import (
     NothingToScan,
     ScannerInfo,
     ToolError,
+    audit_dirs,
     load_json,
 )
+from securepipeline.utils.files import manifest_dirs
 from securepipeline.utils.process import run_command
+
+LOCKFILES = ("package-lock.json", "npm-shrinkwrap.json")
 
 
 class NodeScanner(BaseScanner):
@@ -27,15 +31,19 @@ class NodeScanner(BaseScanner):
         return [Check("npm", self._run_npm_audit)]
 
     def _run_npm_audit(self, root: Path) -> list[Finding]:
-        if not (root / "package.json").exists():
+        dirs = manifest_dirs(root, {"package.json"}, LOCKFILES)
+        if not dirs:
             raise NothingToScan("no package.json")
-        if not any((root / name).exists() for name in ("package-lock.json", "npm-shrinkwrap.json")):
-            raise CheckSkipped("package-lock.json missing, npm audit cannot check anything")
+        return audit_dirs(root, dirs, _npm_audit)
 
-        data = load_json(run_command(["npm", "audit", "--json"], cwd=root, timeout=300))
-        if data.get("error"):
-            raise ToolError(str(data["error"].get("summary", "npm audit error"))[:160])
-        return parse_npm_audit(data)
+
+def _npm_audit(directory: Path) -> list[Finding]:
+    if not any((directory / name).exists() for name in LOCKFILES):
+        raise CheckSkipped("package-lock.json missing, npm audit cannot check anything")
+    data = load_json(run_command(["npm", "audit", "--json"], cwd=directory, timeout=300))
+    if data.get("error"):
+        raise ToolError(str(data["error"].get("summary", "npm audit error"))[:160])
+    return parse_npm_audit(data)
 
 
 def parse_npm_audit(data: dict) -> list[Finding]:

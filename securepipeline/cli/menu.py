@@ -32,6 +32,9 @@ from securepipeline.ui.theme import CYAN, DOT, GRAY, GREEN, RESET, WHITE, YELLOW
 
 QUIT_WORDS = ("q", "0", "quit", "exit")
 
+# Runs the "!" commands; tests replace it to check what would run.
+_spawn = subprocess.run
+
 
 @dataclass(frozen=True)
 class MenuItem:
@@ -199,7 +202,7 @@ def _run_command(command: str) -> None:
         print_status("Type the command right after the !, for example !ls", "warning")
         return
     try:
-        subprocess.run(args, check=False)  # nosec B603 - the user typed this command
+        _spawn(args, check=False)  # nosec B603 - the user typed this command
     except FileNotFoundError:
         print_status(
             f"Command not found: {args[0]}. Type it right after the !, for example !ls "

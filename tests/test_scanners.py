@@ -6,7 +6,7 @@ import subprocess  # nosec B404 - builds a throwaway git repository
 
 import pytest
 
-from securepipeline.core.models import Severity
+from securepipeline.core.models import Finding, Severity
 from securepipeline.scanners import docker as docker_scanner
 from securepipeline.scanners import flutter as flutter_scanner
 from securepipeline.scanners import kubernetes as k8s_scanner
@@ -14,8 +14,16 @@ from securepipeline.scanners import leaks as secrets_scanner
 from securepipeline.scanners import node as node_scanner
 from securepipeline.scanners import php as php_scanner
 from securepipeline.scanners import python as python_scanner
+from securepipeline.scanners import rust as rust_scanner
 from securepipeline.scanners import semgrep as semgrep_scanner
-from securepipeline.scanners.base import CheckSkipped, NothingToScan, ToolError, load_json
+from securepipeline.scanners.base import (
+    CheckSkipped,
+    NothingToScan,
+    PartialScan,
+    ToolError,
+    audit_dirs,
+    load_json,
+)
 from securepipeline.utils.process import CommandResult
 
 
@@ -261,6 +269,7 @@ def test_npm_parser():
 
 
 def test_composer_needs_a_lockfile(tmp_path):
+    (tmp_path / "composer.json").write_text("{}")
     with pytest.raises(CheckSkipped):
         php_scanner.PhpScanner()._run_composer_audit(tmp_path)
 
@@ -397,3 +406,131 @@ def test_kubesec_unsupported_kind_is_not_an_error(monkeypatch, tmp_path):
     payload = json.dumps([{"valid": True, "message": "not supported", "scoring": {}}])
     fake_runner(monkeypatch, k8s_scanner, payload, code=2)
     assert k8s_scanner.KubernetesScanner()._run_kubesec(tmp_path) == []
+
+
+# Folders at any depth --------------------------------------------------------
+
+def test_audit_dirs_prefixes_paths_with_the_folder(tmp_path):
+    (tmp_path / "web").mkdir()
+    findings = audit_dirs(
+        tmp_path, [tmp_path, tmp_path / "web"],
+        lambda d: [Finding("R", "t", Severity.LOW, "package-lock.json")],
+    )
+    assert [f.file_path for f in findings] == ["package-lock.json", "web/package-lock.json"]
+
+
+def test_audit_dirs_keeps_findings_of_the_folders_it_could_audit(tmp_path):
+    def audit(directory):
+        if directory.name == "web":
+            raise CheckSkipped("lockfile missing")
+        return [Finding("R", "t", Severity.LOW, "x")]
+
+    (tmp_path / "web").mkdir()
+    with pytest.raises(PartialScan, match="web: lockfile missing") as error:
+        audit_dirs(tmp_path, [tmp_path, tmp_path / "web"], audit)
+    assert len(error.value.findings) == 1
+
+
+def test_audit_dirs_skips_when_no_folder_could_be_audited(tmp_path):
+    with pytest.raises(CheckSkipped) as error:
+        audit_dirs(tmp_path, [tmp_path], lambda _d: (_ for _ in ()).throw(CheckSkipped("no lockfile")))
+    assert not isinstance(error.value, PartialScan)
+
+
+def test_npm_audit_runs_in_each_frontend_folder(monkeypatch, tmp_path):
+    for folder in ("frontend", "admin"):
+        (tmp_path / folder).mkdir()
+        (tmp_path / folder / "package.json").write_text("{}")
+        (tmp_path / folder / "package-lock.json").write_text("{}")
+    calls = []
+
+    def run(command, cwd=None, **_kwargs):
+        calls.append(cwd)
+        return CommandResult(command, 0, json.dumps({"vulnerabilities": {}}))
+
+    monkeypatch.setattr(node_scanner, "run_command", run)
+    node_scanner.NodeScanner()._run_npm_audit(tmp_path)
+    assert calls == [tmp_path / "admin", tmp_path / "frontend"]
+
+
+# Rust --------------------------------------------------------------------------
+
+OSV_OUTPUT = {"results": [{"source": {"path": "/p/Cargo.lock", "type": "lockfile"}, "packages": [
+    {
+        "package": {"name": "quick-xml", "version": "0.31.0", "ecosystem": "crates.io"},
+        "groups": [{"ids": ["RUSTSEC-2026-0194"], "max_severity": "7.5"}],
+        "vulnerabilities": [{
+            "id": "RUSTSEC-2026-0194", "summary": "Denial of service", "aliases": ["CVE-2026-1"],
+            "affected": [{"ranges": [{"events": [{"introduced": "0"}, {"fixed": "0.37.0"}]}],
+                          "database_specific": {"informational": None}}],
+        }],
+    },
+    {
+        "package": {"name": "basic-toml", "version": "0.1.10", "ecosystem": "crates.io"},
+        "groups": [{"ids": ["RUSTSEC-2026-0374"], "max_severity": ""}],
+        "vulnerabilities": [{
+            "id": "RUSTSEC-2026-0374", "summary": "basic-toml is unmaintained",
+            "affected": [{"ranges": [], "database_specific": {"informational": "unmaintained"}}],
+        }],
+    },
+]}]}
+
+
+def test_osv_scanner_rates_by_cvss_and_flags_unmaintained_crates():
+    findings = {f.rule_id: f for f in rust_scanner.parse_osv_scanner(OSV_OUTPUT)}
+    assert findings["RUSTSEC-2026-0194"].severity == Severity.HIGH
+    assert findings["RUSTSEC-2026-0194"].remediation == "Upgrade quick-xml to 0.37.0"
+    assert findings["RUSTSEC-2026-0374"].severity == Severity.LOW
+    assert "[unmaintained]" in findings["RUSTSEC-2026-0374"].description
+
+
+def test_osv_scanner_reads_the_lockfile_only(monkeypatch, tmp_path):
+    (tmp_path / "Cargo.toml").write_text("")
+    (tmp_path / "Cargo.lock").write_text("")
+    calls = fake_runner(monkeypatch, rust_scanner, json.dumps({"results": []}), code=1)
+    rust_scanner.RustScanner()._run_osv_scanner(tmp_path)
+    assert calls[0][-2:] == ["--lockfile", str(tmp_path / "Cargo.lock")]
+
+
+def test_osv_scanner_needs_a_cargo_lock(tmp_path):
+    (tmp_path / "Cargo.toml").write_text("")
+    with pytest.raises(CheckSkipped, match="Cargo.lock missing"):
+        rust_scanner.RustScanner()._run_osv_scanner(tmp_path)
+
+
+def test_cargo_deny_only_runs_with_a_project_policy(tmp_path):
+    (tmp_path / "Cargo.toml").write_text("")
+    with pytest.raises(NothingToScan, match="no deny.toml"):
+        rust_scanner.RustScanner()._run_cargo_deny(tmp_path)
+
+
+def test_cargo_deny_never_rewrites_the_lockfile_or_repeats_advisories(monkeypatch, tmp_path):
+    for name in ("Cargo.toml", "Cargo.lock", "deny.toml"):
+        (tmp_path / name).write_text("")
+    monkeypatch.setattr(rust_scanner.shutil, "which", lambda _name: "/usr/bin/cargo")
+    calls = fake_runner(monkeypatch, rust_scanner)
+    rust_scanner.RustScanner()._run_cargo_deny(tmp_path)
+    assert "--locked" in calls[0]
+    assert "advisories" not in calls[0]
+
+
+def test_cargo_deny_parses_diagnostics():
+    output = "\n".join([
+        json.dumps({"type": "diagnostic", "fields": {
+            "severity": "error", "code": "rejected", "message": "license GPL-3.0 rejected",
+            "labels": [{"line": 12, "span": "foo 1.0"}]}}),
+        json.dumps({"type": "summary", "fields": {}}),
+        "not json",
+    ])
+    [finding] = rust_scanner.parse_cargo_deny(output)
+    assert (finding.rule_id, finding.severity, finding.line) == ("cargo-deny/rejected", Severity.HIGH, 12)
+
+
+def test_cargo_deny_reports_the_error_line_not_the_usage_hint(monkeypatch, tmp_path):
+    for name in ("Cargo.toml", "Cargo.lock", "deny.toml"):
+        (tmp_path / name).write_text("")
+    monkeypatch.setattr(rust_scanner.shutil, "which", lambda _name: "/usr/bin/cargo")
+    fake_runner(monkeypatch, rust_scanner, code=2,
+                stderr="error: unexpected argument '--config' found\n\nFor more information, try '--help'.\n")
+    with pytest.raises(ToolError, match="unexpected argument"):
+        rust_scanner.RustScanner()._run_cargo_deny(tmp_path)

@@ -13,6 +13,7 @@ REGISTRY_RULESETS = {
     "python": ["p/python"],
     "node": ["p/javascript", "p/typescript"],
     "php": ["p/php"],
+    "rust": ["p/rust"],
 }
 LOCAL_RULES = {
     "node": "js.yml",
@@ -41,7 +42,7 @@ class SemgrepScanner(BaseScanner):
     def info(self) -> ScannerInfo:
         return ScannerInfo(
             name="Semgrep SAST",
-            description="Static analysis for Python, JS/TS and PHP (registry and bundled rules)",
+            description="Static analysis for Python, JS/TS, PHP and Rust (registry and bundled rules)",
             stack="sast",
         )
 

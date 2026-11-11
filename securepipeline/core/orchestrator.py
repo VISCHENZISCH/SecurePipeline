@@ -15,7 +15,7 @@ from securepipeline.core.models import (
     ScanResult,
 )
 from securepipeline.scanners import get_scanners_for_stacks
-from securepipeline.scanners.base import Check, CheckSkipped, NothingToScan, ToolError
+from securepipeline.scanners.base import Check, CheckSkipped, NothingToScan, PartialScan, ToolError
 from securepipeline.utils.logger import log
 from securepipeline.utils.process import check_tool
 
@@ -89,6 +89,9 @@ def _run_check(module: str, check: Check, root: Path) -> tuple[CheckResult, list
             findings = check.run(root)
         except NothingToScan as e:
             status, detail = CheckStatus.NOTHING, str(e)
+        except PartialScan as e:
+            # The findings are real, but some folders were not checked.
+            status, detail, findings = CheckStatus.SKIPPED, f"partial: {e}", e.findings
         except CheckSkipped as e:
             status, detail = CheckStatus.SKIPPED, str(e)
         except ToolError as e:

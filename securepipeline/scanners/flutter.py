@@ -3,7 +3,15 @@
 from pathlib import Path
 
 from securepipeline.core.models import Finding, Severity
-from securepipeline.scanners.base import BaseScanner, Check, NothingToScan, ScannerInfo, load_json
+from securepipeline.scanners.base import (
+    BaseScanner,
+    Check,
+    NothingToScan,
+    ScannerInfo,
+    audit_dirs,
+    load_json,
+)
+from securepipeline.utils.files import manifest_dirs
 from securepipeline.utils.process import run_command
 
 
@@ -19,10 +27,15 @@ class FlutterScanner(BaseScanner):
         return [Check("dart", self._run_pub_outdated)]
 
     def _run_pub_outdated(self, root: Path) -> list[Finding]:
-        if not (root / "pubspec.yaml").exists():
+        dirs = manifest_dirs(root, {"pubspec.yaml"})
+        if not dirs:
             raise NothingToScan("no pubspec.yaml")
-        command = ["dart", "pub", "outdated", "--json"]
-        return parse_pub_outdated(load_json(run_command(command, cwd=root, timeout=300), ok_codes=(0,)))
+        return audit_dirs(root, dirs, _pub_outdated)
+
+
+def _pub_outdated(directory: Path) -> list[Finding]:
+    command = ["dart", "pub", "outdated", "--json"]
+    return parse_pub_outdated(load_json(run_command(command, cwd=directory, timeout=300), ok_codes=(0,)))
 
 
 def parse_pub_outdated(data: dict) -> list[Finding]:

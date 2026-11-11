@@ -6,10 +6,19 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from securepipeline.core.models import Finding, Severity
-from securepipeline.scanners.base import BaseScanner, Check, CheckSkipped, ScannerInfo, load_json
-from securepipeline.utils.files import EXCLUDED_DIRS
+from securepipeline.scanners.base import (
+    BaseScanner,
+    Check,
+    CheckSkipped,
+    NothingToScan,
+    ScannerInfo,
+    audit_dirs,
+    load_json,
+)
+from securepipeline.utils.files import EXCLUDED_DIRS, manifest_dirs
 from securepipeline.utils.process import run_command
 
+PYTHON_MANIFESTS = {"requirements.txt", "pyproject.toml", "setup.py", "Pipfile", "poetry.lock"}
 OSV_URL = "https://api.osv.dev/v1/vulns/{}"
 OSV_TIMEOUT = 10
 OSV_WORKERS = 8
@@ -27,16 +36,10 @@ class PythonScanner(BaseScanner):
         return [Check("pip-audit", self._run_pip_audit), Check("bandit", self._run_bandit)]
 
     def _run_pip_audit(self, root: Path) -> list[Finding]:
-        command = ["pip-audit", "--format", "json", "--output", "-"]
-        if (root / "requirements.txt").exists():
-            command.extend(["--requirement", str(root / "requirements.txt")])
-        elif (root / "pyproject.toml").exists():
-            command.append(str(root))
-        else:
-            raise CheckSkipped("no requirements.txt or pyproject.toml to audit")
-
-        data = load_json(run_command(command, cwd=root, timeout=600))
-        return parse_pip_audit(data, _fetch_severities(data))
+        dirs = manifest_dirs(root, PYTHON_MANIFESTS)
+        if not dirs:
+            raise NothingToScan("no Python manifest")
+        return audit_dirs(root, dirs, _pip_audit)
 
     def _run_bandit(self, root: Path) -> list[Finding]:
         excluded = ",".join(f"*/{name}/*" for name in sorted(EXCLUDED_DIRS))
@@ -54,6 +57,24 @@ def is_test_file(path: str) -> bool:
         or p.stem.endswith("_test")
         or any(part in ("test", "tests") for part in p.parent.parts)
     )
+
+
+def _pip_audit(directory: Path) -> list[Finding]:
+    command = ["pip-audit", "--format", "json", "--output", "-"]
+    if (directory / "requirements.txt").exists():
+        manifest = "requirements.txt"
+        command.extend(["--requirement", str(directory / manifest)])
+    elif (directory / "pyproject.toml").exists():
+        manifest = "pyproject.toml"
+        command.append(str(directory))
+    else:
+        raise CheckSkipped("no requirements.txt or pyproject.toml to audit")
+
+    data = load_json(run_command(command, cwd=directory, timeout=600))
+    findings = parse_pip_audit(data, _fetch_severities(data))
+    for finding in findings:
+        finding.file_path = manifest
+    return findings
 
 
 def _vulnerabilities(data: dict | list) -> list[dict]:

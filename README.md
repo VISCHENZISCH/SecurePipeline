@@ -37,10 +37,10 @@ SecurePipeline detects the technologies in a repository, runs the matching secur
 
 ## Features
 
-- **Automatic detection**: Python, Node.js, PHP, Flutter, Docker and Kubernetes, with no configuration.
+- **Automatic detection**: Python, Node.js, PHP, Rust, Flutter, Docker and Kubernetes, with no configuration. Like GitHub's dependency graph, it finds them at any depth (a `frontend/` folder, a `services/api/` folder...) among the files git tracks, so ignored and dependency folders are skipped.
 - **Fast by design**: tools run in parallel, Semgrep runs once for all stacks, and dependency folders are skipped.
 - **Static analysis**: Semgrep and Bandit, plus bundled rules for JavaScript/TypeScript and PHP.
-- **Dependency audit**: pip-audit, npm audit, composer audit and dart pub outdated.
+- **Dependency audit**: pip-audit, npm audit, composer audit, OSV-Scanner and cargo-deny for Rust, and dart pub outdated. Each folder with its own manifest is audited separately.
 - **Infrastructure audit**: Hadolint, Trivy, kube-score, Checkov and kubesec.
 - **Secret detection**: Gitleaks runs on every project, and secrets are redacted from reports.
 - **Reliable results**: a missing or failing tool makes the scan "incomplete" instead of declaring it clean.
@@ -55,6 +55,7 @@ SecurePipeline detects the technologies in a repository, runs the matching secur
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/python.svg" width="20" height="20" alt="">     | **Python**       | pip-audit, Bandit, Semgrep                                           |
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/nodedotjs.svg" width="20" height="20" alt="">  | **Node.js**      | npm audit, Semgrep with bundled rules                                |
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/php.svg" width="20" height="20" alt="">        | **PHP**          | composer audit, Semgrep with bundled rules                           |
+| <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/rust.svg" width="20" height="20" alt="">       | **Rust**         | OSV-Scanner (RustSec), cargo-deny when the project has a `deny.toml`, Semgrep |
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/flutter.svg" width="20" height="20" alt="">    | **Flutter**      | dart pub outdated (outdated dependencies only, no SAST or CVE audit) |
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/docker.svg" width="20" height="20" alt="">     | **Docker**       | Hadolint, Trivy                                                      |
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/kubernetes.svg" width="20" height="20" alt=""> | **Kubernetes**   | kube-score, Checkov, kubesec                                         |

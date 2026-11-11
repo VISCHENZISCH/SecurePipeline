@@ -12,6 +12,7 @@ from securepipeline.scanners.base import (
     Check,
     CheckSkipped,
     NothingToScan,
+    PartialScan,
     ScannerInfo,
     ToolError,
 )
@@ -129,3 +130,13 @@ def test_semgrep_rule_files_are_packaged():
         with open(path, encoding="utf-8") as handle:
             assert handle.read().startswith("rules:")
     assert not any("dart" in config for config in configs)
+
+
+def test_partial_scan_keeps_findings_but_stays_incomplete(use_checks, tmp_path):
+    finding = Finding("R1", "Found", Severity.HIGH, "api/package-lock.json", scanner="tool")
+    use_checks(Check("tool", raising(PartialScan("web: lockfile missing", [finding]))))
+    result = orchestrator.run_scan(tmp_path, [])
+    assert result.checks[0].status == CheckStatus.SKIPPED
+    assert "web: lockfile missing" in result.checks[0].detail
+    assert [f.rule_id for f in result.findings] == ["R1"]
+    assert result.exit_code() == 2

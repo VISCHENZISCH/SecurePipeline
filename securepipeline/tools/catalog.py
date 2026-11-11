@@ -32,6 +32,28 @@ GITHUB = "https://github.com"
 
 BINARY_TOOLS = (
     BinaryTool(
+        "osv-scanner", "Known vulnerabilities from lockfiles (OSV.dev)",
+        f"{GITHUB}/google/osv-scanner/releases/download/v2.7.0",
+        {
+            "linux-amd64": Asset("osv-scanner_linux_amd64", "160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b"),
+            "linux-arm64": Asset("osv-scanner_linux_arm64", "4061ef4c021ed3c47f203b818f337e351336cc5cd67c0274fc36bd1dfc728dd7"),
+            "darwin-amd64": Asset("osv-scanner_darwin_amd64", "e82c5df7ab0a42dff29a1cd0660711447b56b4c0483ff66ad8634df10fd81a45"),
+            "darwin-arm64": Asset("osv-scanner_darwin_arm64", "d4926ef8da134332543be276dff157e4c170f99ad91fc48e89448a8816bdf70b"),
+            "windows-amd64": Asset("osv-scanner_windows_amd64.exe", "9964ed64ec9a387391eb4cc006ad5c531154821aef29b793e02c448de4686438"),
+        },
+    ),
+    BinaryTool(
+        "cargo-deny", "Rust dependency policy (deny.toml)",
+        f"{GITHUB}/EmbarkStudios/cargo-deny/releases/download/0.20.2",
+        {
+            "linux-amd64": Asset("cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz", "9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f"),
+            "linux-arm64": Asset("cargo-deny-0.20.2-aarch64-unknown-linux-musl.tar.gz", "995c82be0defc7a025cae49a2aa2644ce8245c9a3318fc4103907c6a285e8c7d"),
+            "darwin-amd64": Asset("cargo-deny-0.20.2-x86_64-apple-darwin.tar.gz", "248da7f581724e470071990c088ffc55c811981715f4cbdb258621fb79f8b7a6"),
+            "darwin-arm64": Asset("cargo-deny-0.20.2-aarch64-apple-darwin.tar.gz", "fe67d82a10d8597a3549364cb733a3f9cc1bfff9031b7ae46384a9f2a72090c3"),
+            "windows-amd64": Asset("cargo-deny-0.20.2-x86_64-pc-windows-msvc.tar.gz", "975a22143262fd27476d19ee00c7af67978426e40e1dee94eed6bbade1cf87dc"),
+        },
+    ),
+    BinaryTool(
         "gitleaks", "Secret detection",
         f"{GITHUB}/gitleaks/gitleaks/releases/download/v8.18.2",
         {

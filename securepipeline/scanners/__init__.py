@@ -8,12 +8,14 @@ from securepipeline.scanners.leaks import SecretsScanner
 from securepipeline.scanners.node import NodeScanner
 from securepipeline.scanners.php import PhpScanner
 from securepipeline.scanners.python import PythonScanner
+from securepipeline.scanners.rust import RustScanner
 from securepipeline.scanners.semgrep import REGISTRY_RULESETS, SemgrepScanner
 
 STACK_SCANNERS: dict[str, type[BaseScanner]] = {
     "python":  PythonScanner,
     "node":    NodeScanner,
     "php":     PhpScanner,
+    "rust":    RustScanner,
     "flutter": FlutterScanner,
     "docker":  DockerScanner,
     "k8s":     KubernetesScanner,

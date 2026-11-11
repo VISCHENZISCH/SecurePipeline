@@ -22,6 +22,42 @@ class NothingToScan(Exception):
     """This project has nothing for this tool to analyze."""
 
 
+class PartialScan(CheckSkipped):
+    """Some folders were audited, others could not be: the check stays incomplete."""
+
+    def __init__(self, reason: str, findings: list[Finding]):
+        super().__init__(reason)
+        self.findings = findings
+
+
+def audit_dirs(root: Path, dirs: list[Path], audit: Callable[[Path], list[Finding]]) -> list[Finding]:
+    """Run `audit` in each folder and gather the findings, with project-relative paths.
+
+    A folder that `audit` cannot check (CheckSkipped) does not hide the findings of
+    the others, but it keeps the check incomplete.
+    """
+    findings: list[Finding] = []
+    skipped: list[str] = []
+    for directory in dirs:
+        folder = directory.relative_to(root).as_posix()
+        try:
+            results = audit(directory)
+        except CheckSkipped as e:
+            skipped.append(f"{folder}: {e}" if folder != "." else str(e))
+            continue
+        for finding in results:
+            if folder != "." and finding.file_path and not Path(finding.file_path).is_absolute():
+                finding.file_path = f"{folder}/{finding.file_path}"
+        findings.extend(results)
+
+    if skipped:
+        reason = "; ".join(skipped)
+        if len(skipped) == len(dirs):
+            raise CheckSkipped(reason)
+        raise PartialScan(reason, findings)
+    return findings
+
+
 @dataclass(frozen=True)
 class ScannerInfo:
     name: str
