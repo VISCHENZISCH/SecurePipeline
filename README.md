@@ -27,6 +27,7 @@
   <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/python.svg" width="36" height="36" alt="Python" title="Python">&nbsp;&nbsp;
   <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/nodedotjs.svg" width="36" height="36" alt="Node.js" title="Node.js">&nbsp;&nbsp;
   <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/php.svg" width="36" height="36" alt="PHP" title="PHP">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/rust.svg" width="36" height="36" alt="Rust" title="Rust">&nbsp;&nbsp;
   <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/flutter.svg" width="36" height="36" alt="Flutter" title="Flutter">&nbsp;&nbsp;
   <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/docker.svg" width="36" height="36" alt="Docker" title="Docker">&nbsp;&nbsp;
   <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/kubernetes.svg" width="36" height="36" alt="Kubernetes" title="Kubernetes">&nbsp;&nbsp;
@@ -39,7 +40,7 @@ SecurePipeline detects the technologies in a repository, runs the matching secur
 
 - **Automatic detection**: Python, Node.js, PHP, Rust, Flutter, Docker and Kubernetes, with no configuration. Like GitHub's dependency graph, it finds them at any depth (a `frontend/` folder, a `services/api/` folder...) among the files git tracks, so ignored and dependency folders are skipped.
 - **Fast by design**: tools run in parallel, Semgrep runs once for all stacks, and dependency folders are skipped.
-- **Static analysis**: Semgrep and Bandit, plus bundled rules for JavaScript/TypeScript and PHP.
+- **Static analysis**: Semgrep (Python, JavaScript/TypeScript, PHP and Rust rules) and Bandit, plus bundled rules for JavaScript/TypeScript and PHP.
 - **Dependency audit**: pip-audit, npm audit, composer audit, OSV-Scanner and cargo-deny for Rust, and dart pub outdated. Each folder with its own manifest is audited separately.
 - **Infrastructure audit**: Hadolint, Trivy, kube-score, Checkov and kubesec.
 - **Secret detection**: Gitleaks runs on every project, and secrets are redacted from reports.
@@ -60,11 +61,32 @@ SecurePipeline detects the technologies in a repository, runs the matching secur
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/docker.svg" width="20" height="20" alt="">     | **Docker**       | Hadolint, Trivy                                                      |
 | <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/kubernetes.svg" width="20" height="20" alt=""> | **Kubernetes**   | kube-score, Checkov, kubesec                                         |
 
-Runs on
-<img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/linux.svg" width="16" height="16" alt=""> Linux,
-<img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/apple.svg" width="16" height="16" alt=""> macOS and
-<img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/windows.svg" width="16" height="16" alt=""> Windows.
-See [platform notes](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/INSTALL.md#platforms) for the exceptions.
+### Platforms
+
+<table align="center">
+  <tr>
+    <td align="center" width="200">
+      <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/linux.svg" width="44" height="44" alt=""><br>
+      <strong>Linux</strong><br>
+      <sub>amd64 · arm64</sub><br>
+      <sub>All tools</sub>
+    </td>
+    <td align="center" width="200">
+      <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/apple.svg" width="44" height="44" alt=""><br>
+      <strong>macOS</strong><br>
+      <sub>Intel · Apple Silicon</sub><br>
+      <sub>No Hadolint on Apple Silicon</sub>
+    </td>
+    <td align="center" width="200">
+      <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/logos/windows.svg" width="44" height="44" alt=""><br>
+      <strong>Windows</strong><br>
+      <sub>amd64</sub><br>
+      <sub>No kubesec</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><sub>Details in the <a href="https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/INSTALL.md#platforms">platform notes</a>.</sub></p>
 
 ## Installation
 

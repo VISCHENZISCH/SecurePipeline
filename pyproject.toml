@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
-keywords = ["security", "devsecops", "sast", "sca", "secrets", "scanner", "ci", "semgrep", "trivy", "gitleaks"]
+keywords = ["security", "devsecops", "sast", "sca", "secrets", "scanner", "ci", "semgrep", "trivy", "gitleaks", "rust", "cargo", "osv"]
 authors = [
     {name = "Félix TOVIGNAN"},
 ]

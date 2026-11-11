@@ -115,7 +115,7 @@ docker compose run --rm scanner scan /project --fail-on high
 
 With rootless Docker, container UID 0 is your user: use `--user 0:0` or `env UID=0 GID=0 docker compose run --rm scanner`.
 
-The image does not include `dart`: a Flutter project gives an incomplete scan there, unless you use `--allow-incomplete`.
+The image does not include `dart` or `cargo`: a Flutter project, or a Rust project with a `deny.toml` (cargo-deny needs `cargo`), gives an incomplete scan there, unless you use `--allow-incomplete`. OSV-Scanner still audits `Cargo.lock` without `cargo`.
 
 ---
 
