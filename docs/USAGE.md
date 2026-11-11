@@ -90,6 +90,9 @@ The `.securepipeline/reports/` directory contains:
 
 Each report includes the summary, the scan coverage (the result of each tool) and the details of the findings. Secrets are redacted: only their location and type are kept.
 
+> [!WARNING]
+> Do not commit the `.securepipeline/` folder: the reports point to the weaknesses of your project. Add `.securepipeline/` to your `.gitignore`. If it is already committed, run `git rm -r --cached .securepipeline` and commit.
+
 ---
 
 ## Docker

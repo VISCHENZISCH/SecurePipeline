@@ -80,6 +80,7 @@ The second command downloads the binary tools (Gitleaks, Trivy, Hadolint...) at 
 ```bash
 git clone https://github.com/VISCHENZISCH/SecurePipeline.git
 cd SecurePipeline
+chmod +x install.sh
 ./install.sh
 ```
 
@@ -152,6 +153,15 @@ securepipeline tools install               # Install the missing tools
 | `2`  | Incomplete scan (tool missing or failed) or error |
 
 Reports are written to `.securepipeline/reports/`. Full guide: [docs/USAGE.md](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/USAGE.md).
+
+> [!WARNING]
+> Do not commit the `.securepipeline/` folder. The reports list the weaknesses of your project, with file paths and line numbers, and anyone who can read the repository could use them. Add it to your `.gitignore` before your next commit:
+>
+> ```bash
+> echo ".securepipeline/" >> .gitignore
+> ```
+>
+> If it is already committed, remove it from Git but keep your local copy with `git rm -r --cached .securepipeline`, then commit.
 
 ### Docker
 

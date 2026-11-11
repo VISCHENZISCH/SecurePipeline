@@ -14,6 +14,7 @@ The installation scripts create a virtual environment and install the project an
 ### Linux / macOS
 
 ```bash
+chmod +x install.sh
 ./install.sh
 ```
 
