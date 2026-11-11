@@ -112,22 +112,28 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
   <img src="https://raw.githubusercontent.com/VISCHENZISCH/SecurePipeline/main/docs/assets/screenshots/install-complete.png" width="640" alt="Installation script finishing successfully">
 </p>
 
-The script creates `.venv`, then installs the project and its tools. `npm`, `composer` and `dart` are installed separately if you need them. Details: [docs/INSTALL.md](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/INSTALL.md).
+The script creates `.venv`, installs the project and its tools, then links the `securepipeline` command into `~/.local/bin` so you can run it from any folder. `npm`, `composer` and `dart` are installed separately if you need them. Details: [docs/INSTALL.md](https://github.com/VISCHENZISCH/SecurePipeline/blob/main/docs/INSTALL.md).
 
 ## Usage
 
 ### Interactive menu
 
+Go to the folder of the project you want to scan, then start the tool. The folder you start it from is the project it scans.
+
 On Linux and macOS:
 
 ```bash
-.venv/bin/securepipeline
+cd ~/projects/my-app
+securepipeline
 ```
 
-On Windows, the path uses `Scripts` instead of `bin`:
+If the command is not found, `~/.local/bin` is not in your `PATH`: call the tool by its full path, for example `~/SecurePipeline/.venv/bin/securepipeline`.
+
+On Windows, call it by its full path, with `Scripts` instead of `bin`:
 
 ```powershell
-.\.venv\Scripts\securepipeline.exe
+cd C:\projects\my-app
+C:\SecurePipeline\.venv\Scripts\securepipeline.exe
 ```
 
 The menu displays the current project, its stacks, the missing tools and the last scan summary. Press `1` to scan the current project, or `2` to scan another one right away.

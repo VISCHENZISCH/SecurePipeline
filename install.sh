@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+# Work from the repository, wherever the script is called from.
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+
 banner() {
     local title="$1" width="${2:-80}"
     local left=$(( (width - ${#title}) / 2 ))
@@ -35,8 +39,32 @@ echo "[+] Installing the project and the Python tools..."
 echo "[+] Installing the binaries (pinned versions and SHA-256)..."
 .venv/bin/securepipeline tools install --yes
 
+# Make the command available from any folder through ~/.local/bin.
+# The scan tools are found next to the .venv Python, so a link is enough.
+BIN_DIR="$HOME/.local/bin"
+LINK="$BIN_DIR/securepipeline"
+TARGET="$ROOT/.venv/bin/securepipeline"
+mkdir -p "$BIN_DIR"
+if [ -e "$LINK" ] && [ ! -L "$LINK" ]; then
+    echo "[!] $LINK already exists and is not a link: left unchanged."
+else
+    ln -sfn "$TARGET" "$LINK"
+    echo "[+] Command linked: $LINK"
+fi
+
 echo
 printf '*%.0s' $(seq 1 80); echo
 echo "Installation completed successfully!"
-echo "To start the tool:"
-echo "  .venv/bin/securepipeline"
+echo "To scan a project, go to its folder and start the tool:"
+echo "  cd /path/to/your/project"
+case ":$PATH:" in
+    *":$BIN_DIR:"*)
+        echo "  securepipeline"
+        ;;
+    *)
+        echo "  $TARGET"
+        echo
+        echo "To type only 'securepipeline', add $BIN_DIR to your PATH:"
+        echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+        ;;
+esac

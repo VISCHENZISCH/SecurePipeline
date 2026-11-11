@@ -32,12 +32,25 @@ kubesec has no Windows binary: on this system, a Kubernetes project gives an inc
 
 ## Usage
 
-The tool finds the binaries of its virtual environment by itself. You can activate the environment or call the executable directly:
+Start the tool from the folder of the project to scan: that folder is the current project.
+
+On Linux and macOS, `install.sh` links the command into `~/.local/bin`, so it works from any folder:
 
 ```bash
-.venv/bin/securepipeline                  # Linux / macOS
-.\.venv\Scripts\securepipeline.exe        # Windows
+cd ~/projects/my-app
+securepipeline
 ```
+
+If `securepipeline` is not found, add `~/.local/bin` to your `PATH`, or call the full path `~/SecurePipeline/.venv/bin/securepipeline`.
+
+On Windows, call the executable by its full path:
+
+```powershell
+cd C:\projects\my-app
+C:\SecurePipeline\.venv\Scripts\securepipeline.exe
+```
+
+The tool finds the binaries of its virtual environment by itself, without activating it.
 
 ---
 
